@@ -1,0 +1,34 @@
+hevy_ai_fitness/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py                # FastAPI/Flask entrypoint
+│   ├── api/                   # API endpoints (chat, routines, analysis)
+│   │   ├── __init__.py
+│   │   └── routes.py
+│   ├── hevy/                  # Hevy API integration logic
+│   │   ├── __init__.py
+│   │   └── client.py
+│   ├── llm/                   # LLM integration (OpenAI, etc.)
+│   │   ├── __init__.py
+│   │   └── interface.py
+│   ├── services/              # Business logic & orchestration
+│   │   ├── __init__.py
+│   │   └── workout_analyzer.py
+│   ├── models/                # Data models (Pydantic, ORM, etc.)
+│   │   ├── __init__.py
+│   │   └── workout.py
+│   ├── db/                    # Database or caching layer
+│   │   ├── __init__.py
+│   │   └── db.py
+│   └── utils/                 # Utilities, helpers
+│       ├── __init__.py
+│       └── config.py
+│
+├── tests/                     # Unit and integration tests
+│   └── test_workout.py
+│
+├── .env                       # Environment variables (API keys, etc.)
+├── requirements.txt           # Python dependencies
+├── README.md                  # Project overview
+└── .gitignore

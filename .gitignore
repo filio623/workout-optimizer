@@ -1,0 +1,61 @@
+# Dependencies
+/node_modules/
+/vendor/
+*.egg-info/
+.venv/
+.terraform/
+
+# Compiled/Build artifacts
+/dist/
+/build/
+/target/
+*.o
+*.pyc
+*.class
+*.exe
+*.dll
+*.war
+*.jar
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+__pycache__/
+.mypy_cache/
+.ipynb_checkpoints/ # Jupyter Notebook checkpoints
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.idea/
+.vscode/
+.project
+.settings/
+*.sublime-workspace
+*.sublime-project
+.vs/
+
+# Environment variables and sensitive data
+.env
+.env.local
+.env.*
+secrets.json
+config.json # Only if it contains sensitive data not meant for version control
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
+
+# CI/CD and coverage files
+/coverage/
+*.lcov
+.tox/
+.pytest_cache/
