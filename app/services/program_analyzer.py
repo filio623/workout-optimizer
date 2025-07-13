@@ -1,6 +1,3 @@
-# app/services/program_analyzer.py
-
-from datetime import datetime, timedelta
 import pprint
 from app.hevy.client import HevyClient
 from app.services.workout_analyzer import get_all_program_routines, get_current_program
@@ -10,15 +7,13 @@ if not program_id:
     print("No current program found.")
     exit()  
 
-
-def aggregate_program_exercises(program_id):
+def aggregate_program_exercises(program_id) -> list:
     """Aggregate exercises from all routines in a program."""
     routines = get_all_program_routines(program_id)
     exercises = []
     for routine in routines:
         exercises.extend(routine.get("exercises", []))
     return exercises
-
 
 
 

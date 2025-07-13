@@ -126,10 +126,9 @@ class HevyClient:
         else:
             response.raise_for_status()
     
+if __name__ == "__main__":
+    #testing area
+    hevy_client = HevyClient()
 
-    
-
-hevy_client = HevyClient()
-
-data = hevy_client.get_workout_count()
-print(data)
+    data = hevy_client.get_workout_count()
+    print(data)
