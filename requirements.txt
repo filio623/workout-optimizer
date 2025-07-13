@@ -1,2 +1,11 @@
 requests
 python-dotenv
+openai
+agents
+fastapi
+uvicorn
+pydantic
+pytest
+httpx
+python-multipart
+email-validator
