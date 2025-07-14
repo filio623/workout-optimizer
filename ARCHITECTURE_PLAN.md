@@ -152,6 +152,16 @@ README.md
 
 ---
 
+## Frontend Considerations
+
+- **Future Frontend with Flutter:**
+    - You are considering Flutter for frontend development (web and/or mobile).
+    - The backend API is designed to be frontend-agnostic and exposes standard HTTP/JSON endpoints, making it easy to consume from a Flutter app (using packages like `http`, `dio`, or `chopper`).
+    - When ready, you can build a Flutter app that interacts with your FastAPI backend for chat, workout data, and analysis features.
+    - Authentication, CORS, and API versioning can be added to support a production-grade Flutter frontend.
+
+---
+
 ## How to Extend Later
 - Add a database (SQLite/Postgres) for history, user data, etc.
 - Add a frontend (React, etc.) when ready.

@@ -6,18 +6,18 @@ This plan outlines the development steps for building a minimal, robust, and ext
 ## Phase 1: Core Module Setup
 
 ### 1. Configuration Management
-- [ ] Create `app/config.py`
-  - [ ] Load environment variables from `.env`
-  - [ ] Validate required API keys (HEVY_API_KEY, OPENAI_API_KEY)
-  - [ ] Add configuration classes/settings
-  - [ ] Add error handling for missing config
+- [x] Create `app/config.py`
+  - [x] Load environment variables from `.env`
+  - [x] Validate required API keys (HEVY_API_KEY, OPENAI_API_KEY)
+  - [x] Add configuration classes/settings
+  - [x] Add error handling for missing config
 
 ### 2. Data Models
-- [ ] Create `app/models.py`
-  - [ ] Define Pydantic models for Workout, Routine, Exercise
-  - [ ] Add request/response models for API endpoints
-  - [ ] Include validation and type hints
-  - [ ] Add optional fields and defaults
+- [x] Create `app/models.py`
+  - [x] Define Pydantic models for Workout, Routine, Exercise
+  - [x] Add request/response models for API endpoints
+  - [x] Include validation and type hints
+  - [x] Add optional fields and defaults
 
 ### 3. Hevy API Integration
 - [ ] Refactor existing `app/hevy/client.py`
@@ -114,13 +114,17 @@ agents
 fastapi
 uvicorn
 pydantic
+pytest
+httpx
+python-multipart
+email-validator
 ```
 
 ### Additional Requirements to Add
-- [ ] `pytest` - for testing
-- [ ] `httpx` - for async HTTP requests (optional, for testing)
-- [ ] `python-multipart` - for form data handling (if needed)
-- [ ] `email-validator` - for email validation (if needed)
+- [x] `pytest` - for testing
+- [x] `httpx` - for async HTTP requests (optional, for testing)
+- [x] `python-multipart` - for form data handling (if needed)
+- [x] `email-validator` - for email validation (if needed)
 
 ## Success Criteria
 
@@ -152,3 +156,41 @@ pydantic
 ---
 
 **Remember**: This is a learning project. Take your time, understand each step, and don't hesitate to ask for help when needed! 
+
+## ✅ **Current Structure is Correct!**
+
+The `config.py` and `models.py` files are properly located in the `app/` directory, which is the ideal structure for a FastAPI application:
+
+### **Why This Structure is Good:**
+
+1. **`app/config.py`** ✅
+   - Central configuration accessible to all modules
+   - Follows FastAPI best practices
+   - Easy to import: `from app.config import config`
+
+2. **`app/models.py`** ✅
+   - Data models accessible to all modules
+   - Clean separation of concerns
+   - Easy to import: `from app.models import Workout, Exercise, etc.`
+
+3. **Modular Organization** ✅
+   - `app/hevy/` - Hevy API integration
+   - `app/llm/` - LLM interface
+   - `app/services/` - Business logic
+   - `app/main.py` - FastAPI application entry point
+
+### **Alternative Structures (Not Recommended for This Project):**
+
+❌ **Root level config/models** - Would make imports messy
+❌ **Separate config/ and models/ directories** - Overkill for this size project
+❌ **Inside each module** - Would create circular dependencies
+
+## **Current Structure is Perfect for:**
+- ✅ Minimal, robust MVP
+- ✅ Easy imports and maintenance
+- ✅ Clear separation of concerns
+- ✅ Scalable as the project grows
+
+The structure you have is exactly what we want for a learning project that's minimal but well-organized. We can proceed with confidence to the next step! 
+
+Ready to move on to **Step 3: Hevy API Integration**? 
