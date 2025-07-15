@@ -20,11 +20,11 @@ This plan outlines the development steps for building a minimal, robust, and ext
   - [x] Add optional fields and defaults
 
 ### 3. Hevy API Integration
-- [ ] Refactor existing `app/hevy/client.py`
-  - [ ] Use config.py for API key management
-  - [ ] Add proper error handling and logging
-  - [ ] Add type hints and docstrings
-  - [ ] Test all existing endpoints work correctly
+- [x] Refactor existing `app/hevy/client.py`
+  - [x] Use config.py for API key management
+  - [x] Add proper error handling and logging
+  - [x] Add type hints and docstrings
+  - [x] Test all existing endpoints work correctly
 
 ### 4. LLM Interface
 - [ ] Refactor existing `app/llm/interface.py`

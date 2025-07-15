@@ -1,23 +1,51 @@
 from agents import Agent, Runner, function_tool
-from app.services.workout_analyzer import get_yesterdays_workout, get_workout_duration, get_current_program, get_all_program_routines
-from app.services.program_analyzer import aggregate_program_exercises
+from app.hevy.client import HevyClient, HevyClientError
 from app.config import config
+import logging
+from typing import List
 
 OPENAI_MODEL = config.OPENAI_MODEL
 OPENAI_API_KEY = config.OPENAI_API_KEY
 
+logger = logging.getLogger(__name__)
 
-tools = [
-    function_tool(get_yesterdays_workout),
-    function_tool(get_current_program),
-]
+class LLMInterfaceError(Exception):
+    """Custom exception for LLM interface errors."""
+    
+    def __init__(self, message: str, status_code: int = None):
+        self.message = message
+        super().__init__(f"LLM Interface Error: {message}")
 
-agent = Agent(
-    name="Fitness Assistant",
-    instructions="You are a helpful workout and fitness assistant that provides advice on workout routines, nutrition, and fitness tracking.",
-    model=OPENAI_MODEL,
-    tools=tools,
-    )
 
-result = Runner.run_sync(agent, "Can you tell me the name of my current program and what routines are in it?")
-print(result.final_output)
+class LLMInterface:
+    def __init__(self):
+        try:
+            self.validate_config()
+            self.hevy_client = HevyClient()
+            self.model = OPENAI_MODEL
+            self._setup_agent()
+        except Exception as e:
+            logger.error(f"Error initializing LLMInterface: {e}")
+            raise LLMInterfaceError(f"Error initializing LLMInterface: {e}")
+
+    def validate_config(self):
+        if not OPENAI_API_KEY:
+            raise LLMInterfaceError("OPENAI_API_KEY is required but not provided")
+
+        logger.info("Config validated successfully")
+
+    def _setup_agent(self):
+        tools = self._create_tools()
+        self.agent = Agent(
+            name="Fitness Assistant",
+            instructions="You are a helpful workout and fitness assistant that provides advice on workout routines, nutrition, and fitness tracking.",
+            model=self.model,
+            tools=tools,
+        )
+        logger.info("Agent setup successfully")
+
+    def _create_tools(self) -> List:
+        return []
+
+    def run(self, prompt: str) -> str:
+        pass

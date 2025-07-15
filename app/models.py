@@ -3,8 +3,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 
-
-
 class Routine(BaseModel):
     id: str
     title: str
@@ -14,7 +12,6 @@ class Routine(BaseModel):
     exercises: List[Exercise]
 
 class Workout(BaseModel):
-    """Represents a workout session from Hevy API."""
     id: str
     title: str
     description: Optional[str] = None
@@ -31,7 +28,7 @@ class Exercise(BaseModel):
     exercise_template_id: str
     superset_id: Optional[str] = None
     sets: List[Set]
-    rest_seconds: Optional[int] = 0  # Default to 0 instead of None
+    rest_seconds: Optional[int] = 0
 
 class Set(BaseModel):
     index: int
