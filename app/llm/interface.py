@@ -3,49 +3,80 @@ from app.hevy.client import HevyClient, HevyClientError
 from app.config import config
 import logging
 from typing import List
+from app.models import Routine, ExerciseTemplate, ExerciseTemplateResponse, Exercise, Set
 
 OPENAI_MODEL = config.OPENAI_MODEL
 OPENAI_API_KEY = config.OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
-class LLMInterfaceError(Exception):
-    """Custom exception for LLM interface errors."""
-    
-    def __init__(self, message: str, status_code: int = None):
-        self.message = message
-        super().__init__(f"LLM Interface Error: {message}")
+hevy_client = HevyClient()
 
 
-class LLMInterface:
-    def __init__(self):
-        try:
-            self.validate_config()
-            self.hevy_client = HevyClient()
-            self.model = OPENAI_MODEL
-            self._setup_agent()
-        except Exception as e:
-            logger.error(f"Error initializing LLMInterface: {e}")
-            raise LLMInterfaceError(f"Error initializing LLMInterface: {e}")
+@function_tool
+def get_workout_by_id(workout_id: str):
+    logger.info(f"🔧 Tool called: get_workout_by_id with workout_id={workout_id}")
+    workout = hevy_client.get_workout_by_id(workout_id)
+    logger.info(f"✅ get_workout_by_id completed successfully")
+    return workout
 
-    def validate_config(self):
-        if not OPENAI_API_KEY:
-            raise LLMInterfaceError("OPENAI_API_KEY is required but not provided")
+@function_tool
+def get_workouts():
+    logger.info(f"🔧 Tool called: get_workouts")
+    workouts = hevy_client.get_workouts()
+    logger.info(f"✅ get_workouts completed successfully, returned {len(workouts.workouts)} workouts")
+    return workouts
 
-        logger.info("Config validated successfully")
+@function_tool
+def get_routine_by_id(routine_id: str):
+    logger.info(f"Tool called: get_routine_by_id with routine_id={routine_id}")
+    routine = hevy_client.get_routine_by_id(routine_id)
+    logger.info(f"✅ get_routine_by_id completed successfully")
+    return routine
 
-    def _setup_agent(self):
-        tools = self._create_tools()
-        self.agent = Agent(
-            name="Fitness Assistant",
-            instructions="You are a helpful workout and fitness assistant that provides advice on workout routines, nutrition, and fitness tracking.",
-            model=self.model,
-            tools=tools,
-        )
-        logger.info("Agent setup successfully")
+@function_tool
+def get_routines():
+    logger.info(f"Tool called: get_routines")
+    routines = hevy_client.get_routines()
+    logger.info(f"✅ get_routines completed successfully, returned {len(routines.routines)} routines")
+    return routines
 
-    def _create_tools(self) -> List:
-        return []
 
-    def run(self, prompt: str) -> str:
-        pass
+@function_tool
+def get_available_exercises() -> ExerciseTemplateResponse:
+    logger.info("Tool called: get_available_exercises")
+    exercise_templates = hevy_client.get_exercise_templates()
+    exercises = [Exercise(**exercise_data) for exercise_data in exercise_templates.exercise_templates]
+    logger.info(f"✅ get_available_exercises completed successfully, returned {len(exercise_templates.exercise_templates)} exercises")
+    return exercise_templates
+
+@function_tool
+def create_routine():
+    exercises_templates = get_available_exercises()
+
+    routine = Runner.run_sync(agent, f"Create a routine of 5 exercises that are in {exercies_templates}")
+
+    new_routine = hevy_client.create_routine(routine)
+    return new_routine
+
+
+
+agent = Agent(
+    name="Fitness Assistant",
+    instructions="You are a helpful workout and fitness assistant that provides advice on workout routines, nutrition, and fitness tracking.",
+    model=OPENAI_MODEL,
+    tools=[get_workout_by_id, get_workouts, get_routine_by_id, get_routines, get_available_exercises, create_routine],
+)
+
+
+
+
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+    result = Runner.run_sync(agent, "create a new routine for me")
+
+    print(result.final_output)
+

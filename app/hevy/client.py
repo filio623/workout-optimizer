@@ -1,5 +1,6 @@
 import requests
 import logging
+from agents import Agent, Runner, function_tool
 from app.config import config
 from typing import Optional, Dict, Any
 from app.models import Workout, Routine, ExerciseTemplate, Program, WorkoutResponse, RoutineResponse, ExerciseTemplateResponse, ProgramResponse
@@ -148,14 +149,26 @@ class HevyClient:
     
     def get_exercise_templates(self, page: int = 1, page_size: int = 5) -> ExerciseTemplateResponse:
         """Fetch all exercise templates from Hevy."""
+
+        current_page = page
+        page_size = page_size
         try:
+            all_exercise_templates = []
             endpoint = "v1/exercise_templates"
-            params = {
-                "page": page,
-                "pageSize": page_size,
-            }
-            data = self._make_request("GET", endpoint, params=params)
-            return ExerciseTemplateResponse(**data)
+            while True:
+                params = {
+                    "page": current_page,
+                    "pageSize": page_size,
+                }
+
+                data = self._make_request("GET", endpoint, params=params)
+
+                if current_page >= data.page_count:
+                    break
+
+                all_exercise_templates.extend(data.exercise_templates)
+                current_page += 1
+            return ExerciseTemplateResponse(exercise_templates=all_exercise_templates)
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to fetch exercise templates: {e}")
             raise HevyClientError(f"Failed to fetch exercise templates: {e}")

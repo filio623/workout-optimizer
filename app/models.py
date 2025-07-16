@@ -3,6 +3,25 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 
+class Set(BaseModel):
+    index: int
+    type: str
+    weight_kg: Optional[float] = None
+    reps: Optional[int] = None
+    distance_meters: Optional[float] = None
+    duration_seconds: Optional[int] = None
+    rpe: Optional[float] = None
+    custom_metric: Optional[str] = None
+
+class Exercise(BaseModel):
+    index: int
+    title: str
+    notes: Optional[str] = None
+    exercise_template_id: str
+    superset_id: Optional[str] = None
+    sets: List[Set]
+    #rest_seconds: Optional[int] = 0
+
 class Routine(BaseModel):
     id: str
     title: str
@@ -20,25 +39,6 @@ class Workout(BaseModel):
     updated_at: datetime
     created_at: datetime
     exercises: List[Exercise]
-
-class Exercise(BaseModel):
-    index: int
-    title: str
-    notes: Optional[str] = None
-    exercise_template_id: str
-    superset_id: Optional[str] = None
-    sets: List[Set]
-    rest_seconds: Optional[int] = 0
-
-class Set(BaseModel):
-    index: int
-    type: str
-    weight_kg: Optional[float] = None
-    reps: Optional[int] = None
-    distance_meters: Optional[float] = None
-    duration_seconds: Optional[int] = None
-    rpe: Optional[float] = None
-    custom_metric: Optional[str] = None
 
 class ExerciseTemplate(BaseModel):
     id: str

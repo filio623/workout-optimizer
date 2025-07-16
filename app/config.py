@@ -5,12 +5,17 @@ load_dotenv()
 
 class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    OPENAI_MODEL = "gpt-4o-mini"
+
     HEVY_API_KEY = os.getenv("HEVY_API_KEY")
+    HEVY_BASE_URL = "https://api.hevyapp.com"
+
+
 
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
-    HEVY_BASE_URL = "https://api.hevyapp.com"
-    OPENAI_MODEL = "gpt-4o-mini"
+
+
 
     def __init__(self):
         self.validate_api_keys()
