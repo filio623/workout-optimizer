@@ -1,55 +1,43 @@
-from datetime import datetime, timedelta
-import pprint
+import logging
+import pandas as pd
+from typing import List, Dict, Any
 from app.hevy.client import HevyClient
 
 
-MUSCLE_GROUP_KEYWORDS = {
-    "chest": ["chest", "pectorals", "pecs"],
-    "back": ["back", "lats", "latissimus dorsi"],
-    "legs": ["legs", "quadriceps", "hamstrings", "calves"],
-    "shoulders": ["shoulders", "deltoids", "delts"],
-    "arms": ["arms", "biceps", "triceps", "forearms"],
-    "core": ["core", "abdominals", "abs", "obliques"],
-    "glutes": ["glutes", "gluteus maximus", "buttocks"],
-    "upper body": ["upper body", "upper", "chest", "back", "shoulders", "arms"],
-    "lower body": ["lower body", "lower", "legs", "glutes", "calves", "quadriceps", "hamstrings"],
-}
+logger = logging.getLogger(__name__)
 
-heavy_client = HevyClient()
+class WorkoutAnalyzer:
 
-now = datetime.now()
-yesterday = now - timedelta(days=2)
+    def __init__(self):
+        self.hevy_client = HevyClient()
+        self.workouts = []
+        self.workouts_df = None
+        self.exercises_df = None
+        self.sets_df = None
 
-def get_yesterdays_workout() -> dict:
-    date_str = yesterday.strftime("%Y-%m-%d")
-    data = heavy_client.get_workouts()
-    for workout in data['workouts']:
-        try:
-            if workout['start_time'].split('T')[0] == date_str:
-                return workout
-        except Exception as e:
-            print(f"Error fetching yesterday's workout: {e}")
-            return None
-     
-def get_workout_duration(workout) -> timedelta:
-    start_time = datetime.fromisoformat(workout['start_time'].replace('Z', '+00:00'))
-    end_time = datetime.fromisoformat(workout['end_time'].replace('Z', '+00:00'))
-    duration = end_time - start_time
-    return duration
+        self._load_workouts()
+        self.create_all_dataframes()
 
-def get_current_program() -> str:
-    last_workout = heavy_client.get_workouts(page=1, page_size=2)['workouts'][1]
-    last_workout_title = last_workout['title']
-    for routine in heavy_client.get_routines()['routines']:
-        if routine['title'] == last_workout_title:
-            return routine['folder_id']
+    def _load_workouts(self):
+        """Load all workouts from the Hevy API."""
+        logger.info("Loading workouts...")
+        current_page = 1
+        max_pages = 200
 
-def get_all_program_routines(program_id) -> list:
-    routines = heavy_client.get_routines()
-    return [routine for routine in routines['routines'] if routine['folder_id'] == program_id]
-    
+        while current_page < max_pages:
+            workouts_response = self.hevy_client.get_workouts(page=current_page)
+            if current_page >= workouts_response.page_count:
+                break
+            self.workouts.extend(workouts_response.workouts)
+            current_page += 1
+
+    def create_all_dataframes(self):
+        """Create all dataframes."""
+        self.workouts_df = pd.DataFrame(self.workouts)
+
+
+
 if __name__ == "__main__":
     #testing area
-    duration = get_workout_duration(get_yesterdays_workout())
-    print(f"Yesterday's workout duration: {duration}")
-    print(type(duration))
+    workout_analyzer = WorkoutAnalyzer()
+    print(workout_analyzer.workouts_df.head())
