@@ -1,36 +1,90 @@
-# Pydantic data models for the Workout Optimizer app 
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, Field
 from typing import Optional, List
+from datetime import datetime
 
-class Set(BaseModel):
-    index: int
+
+# -----------------------------
+# Common Building Blocks
+# -----------------------------
+
+class RepRange(BaseModel):
+    start: int
+    end: int
+
+class SetBase(BaseModel):
     type: str
     weight_kg: Optional[float] = None
     reps: Optional[int] = None
     distance_meters: Optional[float] = None
     duration_seconds: Optional[int] = None
-    rpe: Optional[float] = None
-    custom_metric: Optional[str] = None
+    custom_metric: Optional[float] = None
+    rep_range: Optional[RepRange] = None
 
-class Exercise(BaseModel):
+
+# -----------------------------
+# Request Models
+# -----------------------------
+
+class SetCreate(SetBase):
+    pass
+
+class ExerciseCreate(BaseModel):
+    exercise_template_id: str
+    superset_id: Optional[int] = None
+    rest_seconds: Optional[int] = 0
+    notes: Optional[str] = None
+    sets: List[SetCreate]
+
+class RoutineCreate(BaseModel):
+    title: str
+    folder_id: Optional[int] = None
+    notes: Optional[str] = None
+    exercises: List[ExerciseCreate]
+
+class RoutineCreatePayload(BaseModel):
+    routine: RoutineCreate
+
+class WorkoutCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_time: datetime
+    end_time: datetime
+    is_private: bool = False
+    exercises: List[ExerciseCreate]
+
+class WorkoutCreatePayload(BaseModel):
+    workout: WorkoutCreate
+
+class RoutineFolderCreatePayload(BaseModel):
+    routine_folder: dict[str, str]  # {'title': 'Push Pull 🏋️‍♂️'}
+
+
+# -----------------------------
+# Response Models
+# -----------------------------
+
+class SetResponse(SetBase):
+    index: int
+    rpe: Optional[float] = None
+
+class ExerciseResponse(BaseModel):
     index: int
     title: str
     notes: Optional[str] = None
     exercise_template_id: str
-    superset_id: Optional[str] = None
-    sets: List[Set]
-    #rest_seconds: Optional[int] = 0
+    supersets_id: Optional[int] = None
+    rest_seconds: Optional[int] = 0
+    sets: List[SetResponse]
 
-class Routine(BaseModel):
+class RoutineResponseItem(BaseModel):
     id: str
     title: str
-    folder_id: int
+    folder_id: Optional[int]
     updated_at: datetime
     created_at: datetime
-    exercises: List[Exercise]
+    exercises: List[ExerciseResponse]
 
-class Workout(BaseModel):
+class WorkoutResponseItem(BaseModel):
     id: str
     title: str
     description: Optional[str] = None
@@ -38,36 +92,45 @@ class Workout(BaseModel):
     end_time: datetime
     updated_at: datetime
     created_at: datetime
-    exercises: List[Exercise]
+    exercises: List[ExerciseResponse]
 
 class ExerciseTemplate(BaseModel):
     id: str
     title: str
-    exercise_type: str
+    exercise_type: str = Field(alias="type")
     primary_muscle_group: str
     secondary_muscle_groups: List[str]
     equipment: str
     is_custom: bool
 
-class Program(BaseModel):
+class RoutineFolder(BaseModel):
     id: int
     index: int
     title: str
     updated_at: datetime
     created_at: datetime
 
+# -----------------------------
+# Response Wrappers (Pagination)
+# -----------------------------
+
 class BaseResponse(BaseModel):
     page: int
     page_count: int
 
 class WorkoutResponse(BaseResponse):
-    workouts: List[Workout]
+    workouts: List[WorkoutResponseItem]
 
 class RoutineResponse(BaseResponse):
-    routines: List[Routine]
+    routines: List[RoutineResponseItem]
 
 class ExerciseTemplateResponse(BaseResponse):
     exercise_templates: List[ExerciseTemplate]
 
-class ProgramResponse(BaseResponse):
-    routine_folders: List[Program]
+class RoutineFolderResponse(BaseResponse):
+    routine_folders: List[RoutineFolder]
+
+
+if __name__ == "__main__":
+    model = RoutineCreate(title="Test", notes=None, exercises=[ExerciseCreate(exercise_template_id="123", superset_id=None, rest_seconds=0, notes=None, sets=[SetCreate(type="normal", weight_kg=None, reps=10, distance_meters=None, duration_seconds=None, custom_metric=None, rep_range=RepRange(start=8, end=12))])])
+    print(model.model_dump_json())
