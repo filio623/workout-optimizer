@@ -1,7 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
+from app.config import config
+from app.hevy.client import HevyClient
+from app.llm.interface import LLMInterface
 
-# TODO: Import config, hevy_client, llm_interface, workout_analyzer modules as you implement them
+# Initialize clients
+hevy_client = HevyClient()
+llm_interface = LLMInterface()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

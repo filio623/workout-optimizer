@@ -129,8 +129,3 @@ class ExerciseTemplateResponse(BaseResponse):
 
 class RoutineFolderResponse(BaseResponse):
     routine_folders: List[RoutineFolder]
-
-
-if __name__ == "__main__":
-    model = RoutineCreate(title="Test", notes=None, exercises=[ExerciseCreate(exercise_template_id="123", superset_id=None, rest_seconds=0, notes=None, sets=[SetCreate(type="normal", weight_kg=None, reps=10, distance_meters=None, duration_seconds=None, custom_metric=None, rep_range=RepRange(start=8, end=12))])])
-    print(model.model_dump_json())
