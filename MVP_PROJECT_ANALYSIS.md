@@ -15,11 +15,10 @@
 - **Logging** - Comprehensive logging for debugging and monitoring
 
 ### 🔄 **Current Capabilities**
-- **8 Function Tools Available:**
+- **7 Function Tools Available:**
+  - `get_workout_data`, `get_exercise_data` - Analysis and recommendations
   - `get_workout_by_id`, `get_workouts` - Workout data retrieval
   - `get_routine_by_id`, `get_routines` - Routine data retrieval
-  - `get_exercise_templates` - Instant exercise access (432 exercises)
-  - `refresh_exercise_cache`, `get_cache_info` - Cache management
   - `create_routine` - Routine creation and posting to Hevy
 
 - **Performance Metrics:**

@@ -1,8 +1,12 @@
+"""
+Configuration management for the workout optimizer.
+"""
+
 import os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file if it exists
 load_dotenv()
-
 
 class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -32,6 +36,5 @@ class Config:
         except ValueError as e:
             print(f"Error: {e}")
             return False
-
 
 config = Config()
