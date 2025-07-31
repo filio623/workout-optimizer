@@ -15,8 +15,6 @@ def aggregate_program_exercises(program_id) -> list:
         exercises.extend(routine.get("exercises", []))
     return exercises
 
-
-
 if __name__ == "__main__":
     exercises = aggregate_program_exercises(program_id)
     print(f"Total exercises in program {program_id}: {len(exercises)}")
