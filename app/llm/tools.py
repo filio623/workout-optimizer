@@ -38,7 +38,7 @@ def _create_default_exercise(exercise_template_id: str) -> ExerciseCreate:
     )
 
 @function_tool
-def get_workout_data(time_period: str = "6 months", limit: int = 50) -> Dict[str, Any]:
+def get_workout_data(time_period: str = "6 months", limit: int = 10) -> Dict[str, Any]:
     """Retrieve workout data for analysis over a specified time period.
     
     This tool fetches workout data from the Hevy API and returns it in a format suitable
@@ -83,8 +83,8 @@ def get_workout_data(time_period: str = "6 months", limit: int = 50) -> Dict[str
     workouts_data = analyzer.workouts_df.head(limit).to_dict('records')
     
     # Limit exercises and sets to avoid context length issues
-    exercises_data = analyzer.exercises_df.head(100).to_dict('records')  # Limit to 100 exercises
-    sets_data = analyzer.sets_df.head(200).to_dict('records')  # Limit to 200 sets
+    exercises_data = analyzer.exercises_df.head(20).to_dict('records')  # Limit to 20 exercises
+    sets_data = analyzer.sets_df.head(50).to_dict('records')  # Limit to 50 sets
     
     return {
         "workouts": workouts_data,
@@ -96,7 +96,7 @@ def get_workout_data(time_period: str = "6 months", limit: int = 50) -> Dict[str
             "total_exercises": len(exercises_data),
             "total_sets": len(sets_data),
             "date_range": f"From {time_period} ago to now",
-            "note": f"Showing limited data (max {limit} workouts, 100 exercises, 200 sets) to avoid context length issues"
+            "note": f"Showing limited data (max {limit} workouts, 20 exercises, 50 sets) to avoid context length issues"
         }
     }
 
