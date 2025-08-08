@@ -267,6 +267,52 @@ def create_routine(routine_title: str, notes: str, exercise_template_ids: List[s
         logger.error(f"❌ create_routine failed: {str(e)}")
         raise
 
+@function_tool
+def update_routine(routine_title: str, notes: str, exercise_template_ids: List[str]) -> Dict[str, Any]:
+    """Updates a workout routine.
+    
+    Creates and saves a new workout routine to the Hevy API with the specified
+    exercises. Each exercise is configured with default settings (3 sets, 8-12 reps,
+    90 seconds rest) that can be adjusted later.
+    
+    Args:
+        routine_title: The name/title for the new routine.
+        notes: Optional notes or description for the routine.
+        exercise_template_ids: List of exercise template IDs to include in the routine.
+            Each ID corresponds to a specific exercise from the exercise database.
+    
+    Returns:
+        dict: Creation status including success status, routine title, and routine ID.
+    
+    Example:
+        >>> create_routine("Push Day", "Focus on chest, shoulders, triceps", ["ex_1", "ex_2", "ex_3"])
+        >>> create_routine("Full Body", "Complete workout", ["squat", "bench", "deadlift"])
+    """
+    logger.info(f"🔧 Tool called: update_routine with {len(exercise_template_ids)} exercises")
+    
+    exercises = [_create_default_exercise(exercise_id) for exercise_id in exercise_template_ids]
+    
+    routine_payload = RoutineCreate(
+        title=routine_title,
+        folder_id=None,
+        notes=notes,
+        exercises=exercises
+    )
+    
+    payload = RoutineCreatePayload(routine=routine_payload)
+    
+    try:
+        routine = hevy_client.update_routine(payload)
+        logger.info(f"✅ create_routine completed successfully, created routine: {routine.title}")
+        return {
+            "status": "success", 
+            "routine_title": routine_title, 
+            "routine_id": routine.id
+        }
+    except Exception as e:
+        logger.error(f"❌ create_routine failed: {str(e)}")
+        raise
+
 # Export all tools for easy importing
 __all__ = [
     'get_workout_data',

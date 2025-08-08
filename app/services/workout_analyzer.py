@@ -126,7 +126,7 @@ class WorkoutAnalyzer:
         # filter to last 3 months
         recent_exercises = self.exercises_df[self.exercises_df['workout_date'] >= three_months_ago]
 
-        exercise_counts = recent_exercises['title'].value_counts().head(10)
+        exercise_counts = recent_exercises['title'].value_counts().head(5)
 
         result = []
 
@@ -137,6 +137,23 @@ class WorkoutAnalyzer:
                 'rank': rank
             })
 
+        return result
+
+    def get_top_muscle_groups(self) -> List[Dict[str, Any]]:
+        """
+        Get the top muscle groups that are worked.
+        """
+        if self.exercises_df is None or self.exercises_df.empty:
+            return []
+
+        top_muscle_groups = self.exercises_df['primary_muscle_group'].value_counts().head(10)
+        result = []
+        for rank, (muscle_group, count) in enumerate(top_muscle_groups.items(), 1):
+            result.append({
+                'muscleGroup': muscle_group,
+                'count': int(count),
+                'rank': rank
+            })
         return result
 
 

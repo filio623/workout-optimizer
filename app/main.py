@@ -5,9 +5,11 @@ from contextlib import asynccontextmanager
 from app.config import config
 from app.hevy.client import HevyClient
 from app.llm.interface import run_agent_with_session
+from app.services.workout_analyzer import WorkoutAnalyzer
 
 # Initialize clients
 hevy_client = HevyClient()
+workout_analyzer = WorkoutAnalyzer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,6 +51,36 @@ async def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
+@app.get("/api/workout-frequency")
+def workout_frequency():
+    try:
+        data = workout_analyzer.get_weekly_workout_counts()
+        return {'data': data}
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/api/top-exercises")
+def top_exercises():
+    try:
+        data = workout_analyzer.get_top_exercises()
+        return {'data': data}
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@app.get("/api/top-muscle-groups")
+def top_exercises():
+    try:
+        data = workout_analyzer.get_top_muscle_groups()
+        return {'data': data}
+    except ConnectionError:
+        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 @app.get("/workouts")
 async def workouts():
     # TODO: Call hevy_client to fetch workouts from Hevy API
@@ -58,6 +90,7 @@ async def workouts():
 async def analyze(workout: dict):
     # TODO: Call workout_analyzer to analyze the workout data
     return {"message": "Analyze"}
+
 
 if __name__ == "__main__":
     import uvicorn
