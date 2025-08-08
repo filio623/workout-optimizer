@@ -28,24 +28,167 @@ Development roadmap for a full-stack AI-powered workout optimizer with FastAPI b
 - **Component Architecture** - Reusable, well-structured components
 - **API Integration** - Seamless frontend-backend communication
 
-## 🔄 CURRENT PRIORITIES
+## 🔄 CURRENT PRIORITIES - DETAILED PLANNING
 
-### Frontend Polish & Features
-- **Workout Data Visualization** - Charts and analytics display
-- **Routine Management Interface** - Visual routine creation and editing
-- **Advanced UI Features** - Dark mode, settings, better mobile experience
+### Phase 6: Workout Data Visualization 📋
+**Status:** PLANNED
+**Why:** Display workout analysis and insights visually for better user understanding
 
-### Backend Enhancements  
-- **Multi-Routine Creation** - Create multiple routines and organize in folders
-- **Advanced Error Handling** - Coordinated frontend-backend error system
-- **Cross-Device Sync** - Replace localStorage with server-side persistence
+**Tasks:**
+- [ ] Integrate chart library (Recharts or Chart.js)
+- [ ] Create workout history timeline view with filtering by date ranges
+- [ ] Build exercise performance charts showing progress over time
+- [ ] Add muscle group analysis visualizations (pie charts, bar graphs)
+- [ ] Create workout summary dashboards with key metrics
+- [ ] Implement data filtering and search functionality
+- [ ] Add export capabilities (PDF, CSV) for workout reports
+- [ ] Create interactive charts with tooltips and drill-down capabilities
 
-## 📋 FUTURE PHASES
+**Learning Goals:** Data visualization, chart libraries, dashboard design, user analytics
 
-### Advanced Features
-- **Database Integration** - User accounts and data persistence
-- **Mobile Development** - React Native app
-- **Production Deployment** - Self-hosted or cloud deployment
+### Phase 7: Routine Management Interface 📋
+**Status:** PLANNED  
+**Why:** Allow users to visually create and manage workout routines
+
+**Tasks:**
+- [ ] Create routine creation wizard/interface with step-by-step flow
+- [ ] Build exercise selection and filtering components (by muscle group, equipment)
+- [ ] Implement drag-and-drop exercise ordering with React DnD
+- [ ] Add exercise set/rep configuration with inline editing
+- [ ] Create routine templates and presets (push/pull/legs, full body, etc.)
+- [ ] Add routine validation and error checking
+- [ ] Implement routine preview functionality before saving
+- [ ] Create routine editing and management tools
+- [ ] Integrate with Hevy API for routine posting with confirmation
+- [ ] Add routine sharing and export features
+- [ ] Implement routine versioning and history tracking
+
+**Learning Goals:** Form wizards, drag-and-drop, complex form handling, API integration
+
+### Phase 8: Advanced UI Features & Polish 📋
+**Status:** PLANNED
+**Why:** Enhance user experience and add professional polish
+
+**Tasks:**
+- [ ] Implement dark/light theme switching with smooth transitions
+- [ ] Add user preferences and settings panel
+- [ ] Create keyboard shortcuts and accessibility features (ARIA labels, focus management)
+- [ ] Add onboarding flow for new users with guided tour
+- [ ] Implement help documentation and contextual tooltips
+- [ ] Add error boundaries and fallback UI for better error handling
+- [ ] Implement performance optimizations (lazy loading, code splitting, memoization)
+- [ ] Improve mobile responsiveness and touch interactions
+- [ ] Add loading skeletons for better perceived performance
+- [ ] Create notification system for user feedback
+
+**Learning Goals:** Advanced React patterns, accessibility, performance optimization, UX design
+
+## 📋 FUTURE PHASES - DETAILED PLANNING
+
+### Phase 9: Backend Enhancements
+
+#### 9.1 Multi-Routine Creation & Folders 📋
+**Status:** PLANNED
+**Why:** Create multiple routines at once (push/pull/legs) and organize in folders
+
+**Tasks:**
+- [ ] Add routine folder creation tools to backend API
+- [ ] Implement multi-routine generation (create 3-day split, 5-day program, etc.)
+- [ ] Add workout program templates (beginner, intermediate, advanced)
+- [ ] Create folder organization system in Hevy API integration
+- [ ] Add bulk routine operations (copy, move, delete multiple)
+- [ ] Test folder organization and routine management
+
+**Learning Goals:** Advanced API design, bulk operations, data organization
+
+#### 9.2 Coordinated Error Handling System 📋
+**Status:** PLANNED
+**Why:** Create professional error handling with frontend-backend coordination
+
+**Tasks:**
+- [ ] Define shared error codes/types between frontend and backend
+- [ ] Update FastAPI endpoints to return structured error responses
+- [ ] Create error handling middleware for consistent error formatting
+- [ ] Update frontend to handle structured backend errors
+- [ ] Add error logging and monitoring system
+- [ ] Implement retry logic for transient failures
+- [ ] Add fallback strategies for API failures
+- [ ] Test error scenarios end-to-end
+
+**Learning Goals:** API design, error architecture, system coordination, production debugging
+
+#### 9.3 Cross-Device Chat History Sync 📋
+**Status:** PLANNED
+**Why:** Replace localStorage with server-side persistence for cross-device/browser sync
+
+**Tasks:**
+- [ ] Design chat history database schema (messages, sessions, users)
+- [ ] Add user authentication system (login/signup)
+- [ ] Create backend API endpoints for chat history (GET/POST/DELETE messages)
+- [ ] Implement server-side session management
+- [ ] Update frontend to sync with server instead of localStorage
+- [ ] Add hybrid approach: localStorage for speed + server for persistence
+- [ ] Handle offline/online state and sync conflicts
+- [ ] Add message encryption for privacy
+- [ ] Test cross-device synchronization
+
+**Learning Goals:** Database design, user authentication, API design, data synchronization, offline-first architecture
+
+**Technology Options:**
+- **Database:** PostgreSQL, Supabase, Firebase, PlanetScale
+- **Auth:** NextAuth, Supabase Auth, Firebase Auth, custom JWT
+- **Sync Strategy:** Real-time (WebSocket) or polling-based
+
+### Phase 10: Production & Deployment
+
+#### 10.1 Database Integration 📋
+**Status:** FUTURE
+**Why:** Add persistent data storage for user accounts and workout history
+
+**Tasks:**
+- [ ] Choose database solution (PostgreSQL, Supabase, etc.)
+- [ ] Design database schema for users, workouts, routines, chat history
+- [ ] Implement database connection and ORM setup
+- [ ] Add user management and authentication
+- [ ] Migrate from file-based storage to database
+- [ ] Add data backup and recovery procedures
+- [ ] Test database performance and optimization
+
+**Learning Goals:** Database design, ORM usage, data migration, user management
+
+#### 10.2 Production Deployment 📋
+**Status:** FUTURE
+**Why:** Deploy application for real-world usage
+
+**Tasks:**
+- [ ] Set up production environment (self-hosted or cloud)
+- [ ] Configure CI/CD pipeline for automated deployments
+- [ ] Add monitoring and logging for production
+- [ ] Implement security best practices
+- [ ] Set up SSL certificates and domain configuration
+- [ ] Add performance monitoring and alerting
+- [ ] Create backup and disaster recovery procedures
+- [ ] Test production deployment and rollback procedures
+
+**Learning Goals:** DevOps, production deployment, monitoring, security
+
+### Phase 11: Mobile Development 📋
+**Status:** FUTURE
+**Why:** Extend the app to mobile platforms
+
+**Tasks:**
+- [ ] Set up React Native project with Expo
+- [ ] Configure TypeScript and development tools for mobile
+- [ ] Set up shared code structure between web and mobile
+- [ ] Implement mobile-optimized navigation
+- [ ] Add offline functionality and data caching
+- [ ] Integrate with device health/fitness APIs
+- [ ] Add push notifications for workout reminders
+- [ ] Implement mobile-specific UI patterns
+- [ ] Add haptic feedback and mobile gestures
+- [ ] Test on iOS and Android devices
+
+**Learning Goals:** React Native fundamentals, mobile development, cross-platform code sharing, native integrations
 
 ## 🎯 SUCCESS METRICS
 

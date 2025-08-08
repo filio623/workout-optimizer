@@ -63,3 +63,6 @@ dump.rdb
 # Cache files
 /cache/
 *.cache
+
+# Kiro spec files (development artifacts)
+.kiro/
