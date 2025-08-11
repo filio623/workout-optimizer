@@ -88,7 +88,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       </button>
       
       {isOpen && (
-        <div className="absolute right-0 top-12 w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+        <div className="absolute right-0 top-12 w-80 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50 shadow-2xl">
           <h3 className="font-semibold text-slate-900 mb-4">Choose Theme</h3>
           <div className="space-y-3">
             {themes.map((theme) => (

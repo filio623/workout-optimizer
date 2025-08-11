@@ -56,12 +56,12 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       return "Can't connect to server. Check your internet connection and make sure the backend is running.";
     }
-    
+
     // Timeout errors
     if (error.name === 'AbortError' && error.message.includes('timeout')) {
       return "Request timed out. The AI is busy, please try again in a moment.";
     }
-    
+
     // HTTP Status errors
     if (error.status) {
       switch (error.status) {
@@ -181,9 +181,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
             timestamp: formatTime(msg.timestamp)
           }} currentTheme={currentTheme} />
         ))}
-        
+
         {isLoading && <TypingIndicator currentTheme={currentTheme} />}
-        
+
         {/* Welcome suggestions */}
         <div className="flex flex-wrap gap-2 mt-8">
           {[
@@ -209,7 +209,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
           <button className="p-3 rounded-xl hover:bg-slate-100 transition-colors">
             <Paperclip className="w-5 h-5 text-slate-600" />
           </button>
-          
+
           <div className="flex-1 relative">
             <input
               type="text"
@@ -220,11 +220,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
               className="w-full bg-slate-100 rounded-2xl px-6 py-3 text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
             />
           </div>
-          
+
           <button className="p-3 rounded-xl hover:bg-slate-100 transition-colors">
             <Mic className="w-5 h-5 text-slate-600" />
           </button>
-          
+
           <button
             onClick={handleSend}
             disabled={!message.trim() || isLoading}

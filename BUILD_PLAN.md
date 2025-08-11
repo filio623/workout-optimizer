@@ -28,60 +28,77 @@ Development roadmap for a full-stack AI-powered workout optimizer with FastAPI b
 - **Component Architecture** - Reusable, well-structured components
 - **API Integration** - Seamless frontend-backend communication
 
-## 🔄 CURRENT PRIORITIES - DETAILED PLANNING
+## 🔄 CURRENT PHASE: AI AGENT ENHANCEMENT
 
-### Phase 6: Workout Data Visualization 📋
-**Status:** PLANNED
-**Why:** Display workout analysis and insights visually for better user understanding
+### Phase 6: Advanced AI Workout Coach 🤖
+**Status:** IN PROGRESS
+**Why:** Transform the AI from a basic chat assistant into an intelligent workout coach with deep fitness knowledge
 
-**Tasks:**
-- [ ] Integrate chart library (Recharts or Chart.js)
-- [ ] Create workout history timeline view with filtering by date ranges
-- [ ] Build exercise performance charts showing progress over time
-- [ ] Add muscle group analysis visualizations (pie charts, bar graphs)
-- [ ] Create workout summary dashboards with key metrics
-- [ ] Implement data filtering and search functionality
-- [ ] Add export capabilities (PDF, CSV) for workout reports
-- [ ] Create interactive charts with tooltips and drill-down capabilities
+**Priority Tasks:**
+- [ ] **Enhanced Function Tools** - Add specialized workout analysis capabilities
+  - [ ] Progressive overload tracking and recommendations
+  - [ ] Workout split optimization (push/pull/legs analysis)
+  - [ ] Recovery time analysis based on workout intensity
+  - [ ] Exercise form and technique recommendations
+  - [ ] Volume/intensity balance optimization
+- [ ] **Smarter Agent Instructions** - Improve AI personality and expertise
+  - [ ] Better context awareness of user's workout history
+  - [ ] Proactive suggestions based on performance patterns
+  - [ ] Personal trainer-like coaching approach
+  - [ ] Goal-oriented recommendations
+- [ ] **Advanced Workout Analysis** - Leverage pandas analyzer more effectively
+  - [ ] Trend analysis over custom time periods
+  - [ ] Weakness identification in current routines
+  - [ ] Performance plateau detection
+  - [ ] Injury risk assessment based on patterns
 
-**Learning Goals:** Data visualization, chart libraries, dashboard design, user analytics
+**Learning Goals:** Advanced AI agent design, fitness domain expertise, pattern recognition, coaching psychology
 
-### Phase 7: Routine Management Interface 📋
+### Phase 7: Data Visualization & Analytics 📊
 **Status:** PLANNED  
-**Why:** Allow users to visually create and manage workout routines
+**Why:** Transform raw workout data into actionable insights and visual analytics
 
 **Tasks:**
-- [ ] Create routine creation wizard/interface with step-by-step flow
-- [ ] Build exercise selection and filtering components (by muscle group, equipment)
-- [ ] Implement drag-and-drop exercise ordering with React DnD
-- [ ] Add exercise set/rep configuration with inline editing
-- [ ] Create routine templates and presets (push/pull/legs, full body, etc.)
-- [ ] Add routine validation and error checking
-- [ ] Implement routine preview functionality before saving
-- [ ] Create routine editing and management tools
-- [ ] Integrate with Hevy API for routine posting with confirmation
-- [ ] Add routine sharing and export features
-- [ ] Implement routine versioning and history tracking
+- [ ] **Interactive Charts** - Replace static sidebar with dynamic visualizations
+  - [ ] Progress tracking charts over time periods
+  - [ ] Exercise performance trends and plateaus
+  - [ ] Muscle group balance analysis
+  - [ ] Volume/intensity correlation charts
+- [ ] **Smart Insights Dashboard** - AI-powered workout insights
+  - [ ] Automatic pattern detection in workout data
+  - [ ] Performance alerts and recommendations
+  - [ ] Goal tracking with visual progress indicators
+  - [ ] Comparative analysis (current vs previous periods)
+- [ ] **Advanced Analytics** - Deep dive into workout optimization
+  - [ ] Progressive overload visualization
+  - [ ] Recovery time analysis charts
+  - [ ] Exercise effectiveness scoring
+  - [ ] Workout split optimization recommendations
 
-**Learning Goals:** Form wizards, drag-and-drop, complex form handling, API integration
+**Learning Goals:** Data visualization, chart libraries, statistical analysis, dashboard design
 
-### Phase 8: Advanced UI Features & Polish 📋
+### Phase 8: Code Cleanup & Architecture Optimization 🧹
 **Status:** PLANNED
-**Why:** Enhance user experience and add professional polish
+**Why:** Optimize codebase for maintainability and performance
 
 **Tasks:**
-- [ ] Implement dark/light theme switching with smooth transitions
-- [ ] Add user preferences and settings panel
-- [ ] Create keyboard shortcuts and accessibility features (ARIA labels, focus management)
-- [ ] Add onboarding flow for new users with guided tour
-- [ ] Implement help documentation and contextual tooltips
-- [ ] Add error boundaries and fallback UI for better error handling
-- [ ] Implement performance optimizations (lazy loading, code splitting, memoization)
-- [ ] Improve mobile responsiveness and touch interactions
-- [ ] Add loading skeletons for better perceived performance
-- [ ] Create notification system for user feedback
+- [ ] **Code Cleanup** - Remove extraneous code and optimize structure
+  - [ ] Remove unused imports, dead code, and debug logs
+  - [ ] Consolidate similar functions and components
+  - [ ] Improve code organization and separation of concerns
+  - [ ] Add comprehensive TypeScript types throughout
+- [ ] **Performance Optimization** - Further improve response times
+  - [ ] Optimize API calls with better batching and caching
+  - [ ] Implement lazy loading for heavy components
+  - [ ] Add memoization for expensive calculations
+  - [ ] Optimize bundle size and loading performance
+- [ ] **Enhanced Error Handling** - More robust error recovery
+  - [ ] Better error boundaries and fallback UI
+  - [ ] Improved user feedback for different error scenarios
+  - [ ] Automatic retry logic for transient failures
+  - [ ] Better logging and debugging capabilities
 
-**Learning Goals:** Advanced React patterns, accessibility, performance optimization, UX design
+**Learning Goals:** Code architecture, performance optimization, error handling patterns, maintainable code practices
 
 ## 📋 FUTURE PHASES - DETAILED PLANNING
 
@@ -206,6 +223,14 @@ Development roadmap for a full-stack AI-powered workout optimizer with FastAPI b
 
 ---
 
-**Status: Full-Stack MVP Complete! 🎉** 
+**Status: Full-Stack MVP Complete with Live Data Integration! 🎉** 
 
-The project now has a complete, working full-stack application with professional chat interface, AI-powered workout analysis, and routine creation capabilities. Ready for enhancement with data visualization and advanced features. 
+The project now has a complete, working full-stack application with:
+- Professional chat interface with AI workout coach
+- Live Hevy workout data integration in sidebar
+- Real-time workout history with set counts and relative dates
+- Optimized performance (0.00s exercise loading)
+- 7+ specialized AI function tools for workout analysis
+
+**Current Focus: AI Agent Enhancement Phase** 🤖
+Ready to transform the AI from basic assistant to intelligent workout coach with advanced analysis capabilities. 

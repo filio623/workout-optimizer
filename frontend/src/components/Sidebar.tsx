@@ -1,7 +1,8 @@
-import React from 'react';
-import { X, Activity, BarChart3, Calendar, Trophy, Target, TrendingUp, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, BarChart3, Calendar, Trophy, Target, TrendingUp, Clock, Dumbbell } from 'lucide-react';
 import ChartsSection from './ChartsSection';
 import { Theme } from './ThemeSelector';
+import { getRecentWorkouts, Workout } from '../services/api';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -10,12 +11,37 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentTheme }) => {
-  const workoutHistory = [
-    { id: 1, type: 'Upper Body', duration: '45 min', calories: 320, date: 'Today' },
-    { id: 2, type: 'Cardio', duration: '30 min', calories: 280, date: 'Yesterday' },
-    { id: 3, type: 'Legs', duration: '60 min', calories: 450, date: '2 days ago' },
-    { id: 4, type: 'Core', duration: '25 min', calories: 180, date: '3 days ago' },
-  ];
+
+  const [workoutHistory, setWorkoutHistory] = useState<Workout[]>([]);
+  useEffect(() => {
+    const fetchWorkoutHistory = async () => {
+      try {
+        const workouts = await getRecentWorkouts();
+        setWorkoutHistory(workouts);
+      } catch (error) {
+        console.error('Error fetching workouts:', error);
+      }
+    };
+
+    fetchWorkoutHistory();
+  }, []);
+
+  const getRelativeTime = (dateString: string): string => {
+    const workoutDate = new Date(dateString);
+    const today = new Date();
+
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const workoutStart = new Date(workoutDate.getFullYear(), workoutDate.getMonth(), workoutDate.getDate());
+
+    const diffTime = todayStart.getTime() - workoutStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    else if (diffDays === 1) return 'Yesterday';
+    else if (diffDays <= 7) return `${diffDays} days ago`;
+    else return workoutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
 
   const stats = [
     { label: 'Weekly Goals', value: '4/5', icon: Target, color: 'text-blue-600' },
@@ -33,10 +59,10 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <div className={`
-        fixed lg:relative lg:translate-x-0 z-50 
+        fixed lg:relative lg:translate-x-0 z-30 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         transition-transform duration-300 ease-in-out
         w-80 h-full ${currentTheme.surface} backdrop-blur-md border-r border-slate-200
@@ -73,41 +99,45 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
           </div>
 
           {/* Recent Workouts */}
-          <div className="flex-1">
+          <div className="mb-6">
             <h3 className="text-sm font-medium text-slate-700 uppercase tracking-wider mb-4">Recent Workouts</h3>
-            <div className="space-y-3">
-              {workoutHistory.map((workout) => (
-                <div
-                  key={workout.id}
-                  className={`${currentTheme.surface} backdrop-blur-sm rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200 cursor-pointer group`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 bg-gradient-to-r ${currentTheme.primary} rounded-full`}></div>
-                      <h4 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {workout.type}
-                      </h4>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {workoutHistory.length === 0 ? (
+                <div className="text-slate-500 text-sm">Loading workouts...</div>
+              ) : (
+                workoutHistory.map((workout) => (
+                  <div
+                    key={workout.id}
+                    className={`${currentTheme.surface} backdrop-blur-sm rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200 cursor-pointer group`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 bg-gradient-to-r ${currentTheme.primary} rounded-full`}></div>
+                        <h4 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
+                          {workout.title}
+                        </h4>
+                      </div>
+                      <span className="text-xs text-slate-500">{getRelativeTime(workout.date)}</span>
                     </div>
-                    <span className="text-xs text-slate-500">{workout.date}</span>
+
+                    <div className="flex items-center gap-4 text-sm text-slate-600">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>{workout.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Dumbbell className="w-3 h-3" />
+                        <span>Total sets {workout.sets}</span>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{workout.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Activity className="w-3 h-3" />
-                      <span>{workout.calories} cal</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           {/* Charts and Analytics Section */}
-          <div className="flex-1 mt-6">
+          <div className="mt-6">
             <ChartsSection />
           </div>
 

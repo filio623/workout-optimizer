@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen, currentThe
   const [themeMenuOpen, setThemeMenuOpen] = React.useState(false);
 
   return (
-    <header className={`${currentTheme.surface} backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between`}>
+    <header className={`${currentTheme.surface} backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between relative z-40`}>
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -39,14 +39,12 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen, currentThe
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
         </button>
         
-        <button className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
-          <ThemeSelector 
-            currentTheme={currentTheme}
-            onThemeChange={onThemeChange}
-            isOpen={themeMenuOpen}
-            onToggle={() => setThemeMenuOpen(!themeMenuOpen)}
-          />
-        </button>
+        <ThemeSelector 
+          currentTheme={currentTheme}
+          onThemeChange={onThemeChange}
+          isOpen={themeMenuOpen}
+          onToggle={() => setThemeMenuOpen(!themeMenuOpen)}
+        />
         
         <button className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
           <Settings className="w-5 h-5 text-slate-600" />

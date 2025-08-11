@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 
 from app.config import config
 from app.models import *
+import pprint
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +161,25 @@ class HevyClient:
 if __name__ == "__main__":
     # Testing area
     hevy_client = HevyClient()
+
+    def testing():
+        data = hevy_client.get_workouts(page_size=7).model_dump(mode="json")
+        workouts = data['workouts'][:7]
+
+        formatted_workouts = []
+        for workout in workouts:
+            start_time = datetime.fromisoformat(workout['start_time'])
+            end_time = datetime.fromisoformat(workout['end_time'])
+            duration_seconds = (end_time - start_time).total_seconds()
+            duration_minutes = int(duration_seconds / 60)
+            duration_hours = int(duration_minutes / 60)
+
+            formatted_workouts.append({
+                'title': workout['title'],
+                'date': start_time.strftime('%m_%d_%Y'),
+                'duration': f"{duration_hours} hours, {duration_minutes % 60} minutes",
+            })
+        return formatted_workouts
+
+    print(testing())
+    

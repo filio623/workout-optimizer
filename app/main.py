@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 from app.config import config
 from app.hevy.client import HevyClient
 from app.llm.interface import run_agent_with_session
 from app.services.workout_analyzer import WorkoutAnalyzer
+from datetime import datetime
 
 # Initialize clients
 hevy_client = HevyClient()
@@ -81,15 +82,45 @@ def top_exercises():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/workouts")
-async def workouts():
-    # TODO: Call hevy_client to fetch workouts from Hevy API
-    return {"message": "Workouts"}
+@app.get("/workout-history")
+async def workout_history():
+    try:
+        data = hevy_client.get_workouts(page_size=7).model_dump(mode="json")
+        workouts = data['workouts'][:7]
+
+        formatted_workouts = []
+        for workout in workouts:
+            start_time = datetime.fromisoformat(workout['start_time'])
+            end_time = datetime.fromisoformat(workout['end_time'])
+            duration_seconds = (end_time - start_time).total_seconds()
+            duration_minutes = int(duration_seconds / 60)
+            duration_hours = int(duration_minutes / 60)
+
+            # Format duration to show only relevant units
+            if duration_hours > 0:
+                duration_str = f"{duration_hours} hours, {duration_minutes % 60} minutes"
+            else:
+                duration_str = f"{duration_minutes} minutes"
+
+            total_sets = sum(len(exercise['sets']) for exercise in workout['exercises'])
+
+            formatted_workouts.append({
+                'id': workout['id'],
+                'title': workout['title'],
+                'date': start_time.isoformat(),
+                'duration': duration_str,
+                'sets': total_sets,
+            })
+        return formatted_workouts
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 @app.get("/analyze")
 async def analyze(workout: dict):
     # TODO: Call workout_analyzer to analyze the workout data
     return {"message": "Analyze"}
+
 
 
 if __name__ == "__main__":
