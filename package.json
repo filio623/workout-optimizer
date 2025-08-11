@@ -1,8 +1,14 @@
 {
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.11",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
-  }
+  "name": "workout-optimizer",
+  "version": "1.0.0",
+  "description": "AI-powered workout analysis and optimization platform",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "dev:backend": "source .venv/bin/activate && python -m app.main",
+    "install:frontend": "cd frontend && npm install"
+  },
+  "keywords": ["fitness", "ai", "workout", "analysis"],
+  "author": "Your Name",
+  "license": "MIT"
 }

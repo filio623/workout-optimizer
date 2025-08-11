@@ -14,7 +14,9 @@ export const sendChatMessage = async (message: string, sessionId: string = 'defa
         });
 
         if (!response.ok) {
-            throw new Error('Failed to send message');
+            const error = new Error('Failed to send message');
+            (error as any).status = response.status;
+            throw error;
         }
         
         const data = await response.json();
