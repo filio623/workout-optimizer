@@ -66,3 +66,5 @@ dump.rdb
 
 # Kiro spec files (development artifacts)
 .kiro/
+
+.ref

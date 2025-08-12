@@ -125,6 +125,17 @@ class HevyClient:
         data = self._make_request("GET", endpoint)
         return RoutineFolder(**data)
 
+    def create_routine_folder(self, title: str) -> RoutineFolder:
+        """Create a new Routine Folder with a title"""
+        endpoint = "/v1/routine_folders"
+
+        folder_create = RoutineFolderCreate(title=title)
+        payload = RoutineFolderCreatePayload(routine_folder=folder_create).model_dump_json(by_alias=True, exclude_none=False)
+
+        data = self._make_request("POST", endpoint, json_data=payload)
+        return RoutineFolder(**data['routine_folder'])
+
+
     def create_workout(self, workout_data: WorkoutCreatePayload) -> WorkoutResponseItem:
         endpoint = "v1/workouts"
         payload = workout_data.model_dump_json(by_alias=True, exclude_none=False)
@@ -141,7 +152,6 @@ class HevyClient:
         """Create a new routine via the Hevy API."""
         endpoint = "v1/routines"
         payload = routine_data.model_dump_json(by_alias=True, exclude_none=False)
-        
         data = self._make_request("POST", endpoint, json_data=payload)
         
         # More robust response handling
@@ -162,24 +172,10 @@ if __name__ == "__main__":
     # Testing area
     hevy_client = HevyClient()
 
-    def testing():
-        data = hevy_client.get_workouts(page_size=7).model_dump(mode="json")
-        workouts = data['workouts'][:7]
+    def folder_test():
+        folder = hevy_client.create_routine_folder("Test Folder")
+        print(folder)
+        pprint.pprint(folder.model_dump(by_alias=True, exclude_none=False), indent=2)
 
-        formatted_workouts = []
-        for workout in workouts:
-            start_time = datetime.fromisoformat(workout['start_time'])
-            end_time = datetime.fromisoformat(workout['end_time'])
-            duration_seconds = (end_time - start_time).total_seconds()
-            duration_minutes = int(duration_seconds / 60)
-            duration_hours = int(duration_minutes / 60)
-
-            formatted_workouts.append({
-                'title': workout['title'],
-                'date': start_time.strftime('%m_%d_%Y'),
-                'duration': f"{duration_hours} hours, {duration_minutes % 60} minutes",
-            })
-        return formatted_workouts
-
-    print(testing())
     
+    folder_test()

@@ -55,8 +55,11 @@ class WorkoutCreate(BaseModel):
 class WorkoutCreatePayload(BaseModel):
     workout: WorkoutCreate
 
+class RoutineFolderCreate(BaseModel):
+    title: str
+
 class RoutineFolderCreatePayload(BaseModel):
-    routine_folder: dict[str, str]  # {'title': 'Push Pull 🏋️‍♂️'}
+    routine_folder: RoutineFolderCreate
 
 
 # -----------------------------

@@ -147,6 +147,14 @@ def get_workout_by_id(workout_id: str) -> Dict[str, Any]:
     
     Fetches detailed information about a single workout including all exercises,
     sets, weights, reps, and metadata.
+
+    All weight values returned by the API that are in kilograms (kg) will be
+    automatically converted to pounds (lbs) using the formula:
+
+    lbs = kg * 2.20462
+
+    Converted values will be rounded to an appropriate decimal place based
+    on the desired precision, and units will be clearly labeled in the output.
     
     Args:
         workout_id: The unique identifier of the workout to retrieve.
@@ -168,6 +176,14 @@ def get_workouts() -> Dict[str, Any]:
     
     Fetches the user's workout history, typically the most recent workouts.
     Useful for getting an overview of recent training activity.
+
+    All weight values returned by the API that are in kilograms (kg) will be
+    automatically converted to pounds (lbs) using the formula:
+
+    lbs = kg * 2.20462
+
+    Converted values will be rounded to an appropriate decimal place based
+    on the desired precision, and units will be clearly labeled in the output.
     
     Returns:
         dict: Paginated list of workouts with metadata including workout count
