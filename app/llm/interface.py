@@ -13,10 +13,9 @@ from app.llm.tools import (
     get_workouts,
     get_routine_by_id,
     get_routines,
-    create_routine
-)
-from app.llm.tools.program_tools import create_workout_program
-from app.llm.tools.program_tools import create_workout_program 
+    create_routine,
+    create_workout_program
+) 
 
 # Configure logging
 logging.basicConfig(

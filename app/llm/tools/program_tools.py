@@ -3,8 +3,8 @@ from typing import List, Optional
 from agents import function_tool
 from app.hevy.client import HevyClient
 from app.models import *
+from app.llm.config import *
 
-DEFAULT_REST_SECONDS = 90
 
 # This is what Layer 1 (AI) will produce and pass to Layer 2
 class WorkoutProgram(BaseModel):
@@ -71,7 +71,6 @@ def create_workout_program(program_data: str) -> str:
 def _create_program_in_hevy(program: WorkoutProgramTemplate) -> dict:
 
     folder = hevy_client.create_routine_folder(program.program_name)
-
     folder_id = folder.id
 
     routines = []
@@ -85,12 +84,12 @@ def _create_program_in_hevy(program: WorkoutProgramTemplate) -> dict:
                 notes ="",
                 sets = [(SetCreate(
                     type="normal",
-                    reps=10,
+                    reps=DEFAULT_REPS,
                     rep_range =  RepRange(
-                        start=8,
-                        end=12
+                        start=DEFAULT_REP_RANGE[0],
+                        end=DEFAULT_REP_RANGE[1]
                     ),
-                    )) for _ in range(3)],
+                    )) for _ in range(DEFAULT_NUM_OF_SETS)],
             )
             exercises.append(exercise)
         routine = RoutineCreate(

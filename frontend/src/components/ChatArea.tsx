@@ -44,10 +44,11 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
     return [];
   };
 
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null);
+
   const scrollToBottom = () => {
-    const messageContainer = document.querySelector('.overflow-y-auto');
-    if (messageContainer) {
-      messageContainer.scrollTop = messageContainer.scrollHeight;
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   };
 
@@ -99,8 +100,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
   }, [messages]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Use setTimeout to ensure DOM has updated before scrolling
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [messages, isLoading]);
 
   // Add welcome message if no messages exist
   const displayMessages = messages.length === 0 ? [
@@ -172,7 +178,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({ currentTheme }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         {displayMessages.map((msg) => (
           <MessageBubble key={msg.id} message={{
             id: typeof msg.id === 'string' ? parseInt(msg.id) || 0 : msg.id,
