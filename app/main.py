@@ -73,7 +73,7 @@ def top_exercises():
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.get("/api/top-muscle-groups")
-def top_exercises():
+def top_muscle_groups():
     try:
         data = workout_analyzer.get_top_muscle_groups()
         return {'data': data}

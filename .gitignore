@@ -52,6 +52,8 @@ config.json # Only if it contains sensitive data not meant for version control
 *.sqlite
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
 dump.rdb
 
 # CI/CD and coverage files
