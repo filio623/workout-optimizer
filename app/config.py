@@ -13,6 +13,7 @@ class Config:
     OPENAI_MODEL = "gpt-4o-mini"
     HEVY_API_KEY = os.getenv("HEVY_API_KEY")
     HEVY_BASE_URL = "https://api.hevyapp.com"
+    LOGFIRE_TOKEN = os.getenv("LOGFIRE_TOKEN")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
     def __init__(self):

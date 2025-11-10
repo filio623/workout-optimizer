@@ -7,6 +7,23 @@ from app.hevy.client import HevyClient
 from app.llm.interface import run_agent_with_session
 from app.services.workout_analyzer import WorkoutAnalyzer
 from datetime import datetime
+import logfire
+
+# Configure Logfire
+if config.LOGFIRE_TOKEN:
+    logfire.configure(
+        token=config.LOGFIRE_TOKEN,
+        service_name="workout-optimizer"
+    )
+else:
+    # Configure without token for local development
+    logfire.configure(
+        send_to_logfire=False,
+        service_name="workout-optimizer"
+    )
+
+# Instrument OpenAI for automatic agent tracing (must be after configure)
+logfire.instrument_openai()
 
 # Initialize clients
 hevy_client = HevyClient()
@@ -14,12 +31,14 @@ workout_analyzer = WorkoutAnalyzer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # TODO: Load config, validate API keys, initialize clients here
     print("App starting up...")
     yield
     print("App shutting down...")
 
 app = FastAPI(lifespan=lifespan)
+
+# Instrument FastAPI with Logfire
+logfire.instrument_fastapi(app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -116,10 +135,7 @@ async def workout_history():
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
-@app.get("/analyze")
-async def analyze(workout: dict):
-    # TODO: Call workout_analyzer to analyze the workout data
-    return {"message": "Analyze"}
+# Note: /analyze endpoint removed - analysis is now handled through AI chat interface
 
 
 

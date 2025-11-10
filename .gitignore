@@ -70,3 +70,6 @@ dump.rdb
 .kiro/
 
 .ref
+
+# Documentation references (only at root level)
+/docs/

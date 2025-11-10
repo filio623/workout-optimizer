@@ -152,7 +152,15 @@ class HevyClient:
         """Create a new routine via the Hevy API."""
         endpoint = "v1/routines"
         payload = routine_data.model_dump_json(by_alias=True, exclude_none=False)
-        data = self._make_request("POST", endpoint, json_data=payload)
+        
+        # Log the payload for debugging
+        logger.debug(f"Creating routine with payload: {payload}")
+        
+        try:
+            data = self._make_request("POST", endpoint, json_data=payload)
+        except Exception as e:
+            logger.error(f"Failed to create routine. Payload was: {payload}")
+            raise HevyClientError(f"Failed to create routine: {str(e)}")
         
         # More robust response handling
         if 'routine' not in data or not data['routine']:

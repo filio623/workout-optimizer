@@ -1,0 +1,25 @@
+{
+  "preferred_rep_ranges": {
+    "strength": [
+      3,
+      5
+    ],
+    "hypertrophy": [
+      8,
+      12
+    ],
+    "endurance": [
+      15,
+      20
+    ]
+  },
+  "exercise_preferences": [],
+  "exercise_dislikes": [],
+  "training_style": "balanced",
+  "rest_preferences": {
+    "compound": 120,
+    "isolation": 90
+  },
+  "created_at": "2025-08-18T07:59:55.610989",
+  "updated_at": "2025-08-18T07:59:55.610982"
+}

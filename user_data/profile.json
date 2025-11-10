@@ -1,0 +1,15 @@
+{
+  "age": 25,
+  "weight_lbs": 175.0,
+  "height_inches": 70.0,
+  "body_fat_percentage": 15.0,
+  "experience_level": "intermediate",
+  "available_days_per_week": 4,
+  "session_duration_minutes": 60,
+  "equipment_access": [
+    "gym"
+  ],
+  "injury_history": [],
+  "created_at": "2025-08-18T07:59:44.342384",
+  "updated_at": "2025-08-18T07:59:44.342373"
+}
