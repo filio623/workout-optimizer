@@ -1712,7 +1712,6 @@ export const api = {
 3. ✅ Create database schema with Alembic migrations
 4. ✅ Set up SQLAlchemy models
 5. ✅ Test database connections
-6. ✅ Migrate existing SQLite chat history to PostgreSQL
 
 **Success Criteria**:
 - PostgreSQL running and accessible
