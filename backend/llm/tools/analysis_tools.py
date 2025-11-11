@@ -8,8 +8,8 @@ import logging
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from agents import function_tool
-from app.services.workout_analyzer import WorkoutAnalyzer
-from app.services.exercise_analyzer import exercise_analyzer
+from backend.services.workout_analyzer import WorkoutAnalyzer
+from backend.services.exercise_analyzer import exercise_analyzer
 from datetime import datetime, timedelta
 import numpy as np
 

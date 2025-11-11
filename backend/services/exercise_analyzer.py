@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any
-from app.services.exercise_cache import exercise_cache
-from app.models import ExerciseTemplate
+from backend.services.exercise_cache import exercise_cache
+from backend.models import ExerciseTemplate
 from collections import defaultdict
 from pprint import pprint
 import json

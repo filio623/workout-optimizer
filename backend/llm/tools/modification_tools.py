@@ -6,10 +6,10 @@ Enables intelligent exercise substitution and real-time routine updates.
 import logging
 from typing import List, Dict, Any, Optional
 from agents import function_tool
-from app.hevy.client import HevyClient
-from app.models import *
-from app.services.exercise_analyzer import exercise_analyzer
-from app.llm.config import DEFAULT_REST_SECONDS, DEFAULT_REPS, DEFAULT_REP_RANGE, DEFAULT_EXERCISE_NOTES
+from backend.hevy.client import HevyClient
+from backend.models import *
+from backend.services.exercise_analyzer import exercise_analyzer
+from backend.llm.config import DEFAULT_REST_SECONDS, DEFAULT_REPS, DEFAULT_REP_RANGE, DEFAULT_EXERCISE_NOTES
 
 logger = logging.getLogger(__name__)
 

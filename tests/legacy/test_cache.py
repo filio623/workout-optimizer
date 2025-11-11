@@ -5,7 +5,7 @@ Test script for the exercise static file functionality.
 
 import logging
 import time
-from app.services.exercise_cache import exercise_cache
+from backend.services.exercise_cache import exercise_cache
 
 # Set up logging
 logging.basicConfig(

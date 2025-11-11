@@ -8,10 +8,10 @@ import json
 from typing import List, Dict, Any, Optional
 from agents import function_tool
 from pydantic import BaseModel
-from app.hevy.client import HevyClient
-from app.models import *
-from app.llm.config import DEFAULT_REST_SECONDS, DEFAULT_REPS, DEFAULT_REP_RANGE, DEFAULT_EXERCISE_NOTES, DEFAULT_NUM_OF_SETS
-from app.services.exercise_analyzer import exercise_analyzer
+from backend.hevy.client import HevyClient
+from backend.models import *
+from backend.llm.config import DEFAULT_REST_SECONDS, DEFAULT_REPS, DEFAULT_REP_RANGE, DEFAULT_EXERCISE_NOTES, DEFAULT_NUM_OF_SETS
+from backend.services.exercise_analyzer import exercise_analyzer
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +253,7 @@ def create_workout_program(program_data: str) -> str:
         logger.info(f"Exercise IDs to validate: {all_exercise_ids}")
         
         # Validate that all exercise IDs exist in our database
-        from app.services.exercise_analyzer import exercise_analyzer
+        from backend.services.exercise_analyzer import exercise_analyzer
         valid_ids = set(ex.id for ex in exercise_analyzer.exercises)
         invalid_ids = [ex_id for ex_id in all_exercise_ids if ex_id not in valid_ids]
         

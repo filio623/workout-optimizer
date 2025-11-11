@@ -5,9 +5,9 @@ This script tests all major components: exercise analysis, workout analysis, and
 """
 
 import logging
-from app.llm.interface import agent, Runner
-from app.services.exercise_analyzer import exercise_analyzer
-from app.services.workout_analyzer import WorkoutAnalyzer
+from backend.llm.interface import agent, Runner
+from backend.services.exercise_analyzer import exercise_analyzer
+from backend.services.workout_analyzer import WorkoutAnalyzer
 
 # Set up logging
 logging.basicConfig(

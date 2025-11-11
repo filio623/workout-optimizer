@@ -4,7 +4,7 @@ Test script for the exercise analyzer functionality.
 """
 
 import logging
-from app.services.exercise_analyzer import exercise_analyzer
+from backend.services.exercise_analyzer import exercise_analyzer
 
 # Set up logging
 logging.basicConfig(

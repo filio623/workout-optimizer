@@ -1,9 +1,9 @@
 import logging
 import pandas as pd
 from typing import List, Dict, Any
-from app.hevy.client import HevyClient
-from app.models import *
-from app.services.exercise_cache import exercise_cache
+from backend.hevy.client import HevyClient
+from backend.models import *
+from backend.services.exercise_cache import exercise_cache
 from datetime import datetime, timedelta
 
 

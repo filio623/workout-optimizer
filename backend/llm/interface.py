@@ -7,9 +7,9 @@ import logging
 import logfire
 import tiktoken
 from agents import Agent, Runner
-from app.config import config
-from app.llm.session_manager import get_or_create_session
-from app.llm.tools import (
+from backend.config import config
+from backend.llm.session_manager import get_or_create_session
+from backend.llm.tools import (
     # Core data tools
     get_workout_data,
     get_exercise_data,

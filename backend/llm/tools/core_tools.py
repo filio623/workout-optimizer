@@ -1,41 +1,21 @@
 """
-Function tools for the LLM agent.
+Core LLM tools for basic data retrieval operations.
+Provides fundamental access to workouts, exercises, and routines.
 """
 
 import logging
 from typing import List, Dict, Any
 from agents import function_tool
-from app.hevy.client import HevyClient
-from app.models import *
-from app.services.workout_analyzer import WorkoutAnalyzer
-from app.services.exercise_analyzer import exercise_analyzer
-from app.llm.config import DEFAULT_REST_SECONDS, DEFAULT_REPS, DEFAULT_REP_RANGE, DEFAULT_EXERCISE_NOTES
+from backend.hevy.client import HevyClient
+from backend.models import *
+from backend.services.workout_analyzer import WorkoutAnalyzer
+from backend.services.exercise_analyzer import exercise_analyzer
 import dateparser
 
 logger = logging.getLogger(__name__)
 
-# Initialize Hevy client
+# Initialize clients
 hevy_client = HevyClient()
-
-def _create_default_exercise(exercise_template_id: str) -> ExerciseCreate:
-    """Create a default exercise configuration."""
-    return ExerciseCreate(
-        exercise_template_id=exercise_template_id,
-        superset_id=None,
-        rest_seconds=DEFAULT_REST_SECONDS,
-        notes=DEFAULT_EXERCISE_NOTES,
-        sets=[
-            SetCreate(
-                type="normal",
-                weight_kg=None,
-                reps=DEFAULT_REPS,
-                distance_meters=None,
-                duration_seconds=None,
-                custom_metric=None,
-                rep_range=RepRange(start=DEFAULT_REP_RANGE[0], end=DEFAULT_REP_RANGE[1])
-            )
-        ]
-    )
 
 @function_tool
 def get_workout_data(time_period: str = "6 months", limit: int = 10) -> Dict[str, Any]:
@@ -48,14 +28,14 @@ def get_workout_data(time_period: str = "6 months", limit: int = 10) -> Dict[str
     Args:
         time_period: Natural language time period to analyze. Examples: "past year", 
             "last month", "3 weeks ago", "6 months", "all time". Defaults to "6 months".
-        limit: Maximum number of workouts to return. Defaults to 50 to avoid context 
+        limit: Maximum number of workouts to return. Defaults to 10 to avoid context 
             length issues.
     
     Returns:
         dict: A dictionary containing:
             - workouts: List of workout data (limited to specified count)
-            - exercises: List of exercise data (limited to 100)
-            - sets: List of set data (limited to 200)
+            - exercises: List of exercise data (limited to 20)
+            - sets: List of set data (limited to 50)
             - time_period: The time period that was analyzed
             - summary: Summary statistics and metadata
     
@@ -83,8 +63,8 @@ def get_workout_data(time_period: str = "6 months", limit: int = 10) -> Dict[str
     workouts_data = analyzer.workouts_df.head(limit).to_dict('records')
     
     # Limit exercises and sets to avoid context length issues
-    exercises_data = analyzer.exercises_df.head(20).to_dict('records')  # Limit to 20 exercises
-    sets_data = analyzer.sets_df.head(50).to_dict('records')  # Limit to 50 sets
+    exercises_data = analyzer.exercises_df.head(20).to_dict('records')
+    sets_data = analyzer.sets_df.head(50).to_dict('records')
     
     return {
         "workouts": workouts_data,
@@ -237,54 +217,6 @@ def get_routines() -> Dict[str, Any]:
     logger.info(f"✅ get_routines completed successfully, returned {len(routines.routines)} routines")
     return routines
 
-@function_tool
-def create_routine(routine_title: str, notes: str, exercise_template_ids: List[str]) -> Dict[str, Any]:
-    """Create a new workout routine with specified exercises.
-    
-    Creates and saves a new workout routine to the Hevy API with the specified
-    exercises. Each exercise is configured with default settings (3 sets, 8-12 reps,
-    90 seconds rest) that can be adjusted later.
-    
-    Args:
-        routine_title: The name/title for the new routine.
-        notes: Optional notes or description for the routine.
-        exercise_template_ids: List of exercise template IDs to include in the routine.
-            Each ID corresponds to a specific exercise from the exercise database.
-    
-    Returns:
-        dict: Creation status including success status, routine title, and routine ID.
-    
-    Example:
-        >>> create_routine("Push Day", "Focus on chest, shoulders, triceps", ["ex_1", "ex_2", "ex_3"])
-        >>> create_routine("Full Body", "Complete workout", ["squat", "bench", "deadlift"])
-    """
-    logger.info(f"🔧 Tool called: create_routine with {len(exercise_template_ids)} exercises")
-    
-    exercises = [_create_default_exercise(exercise_id) for exercise_id in exercise_template_ids]
-    
-    routine_payload = RoutineCreate(
-        title=routine_title,
-        folder_id=None,
-        notes=notes,
-        exercises=exercises
-    )
-    
-    payload = RoutineCreatePayload(routine=routine_payload)
-    
-    try:
-        routine = hevy_client.create_routine(payload)
-        logger.info(f"✅ create_routine completed successfully, created routine: {routine.title}")
-        return {
-            "status": "success", 
-            "routine_title": routine_title, 
-            "routine_id": routine.id
-        }
-    except Exception as e:
-        logger.error(f"❌ create_routine failed: {str(e)}")
-        raise
-
-
-
 # Export all tools for easy importing
 __all__ = [
     'get_workout_data',
@@ -292,6 +224,5 @@ __all__ = [
     'get_workout_by_id',
     'get_workouts',
     'get_routine_by_id',
-    'get_routines',
-    'create_routine'
-] 
+    'get_routines'
+]

@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from pathlib import Path
 
-from app.models import ExerciseTemplate
-from app.hevy.client import HevyClient
+from backend.models import ExerciseTemplate
+from backend.hevy.client import HevyClient
 
 logger = logging.getLogger(__name__)
 
 # Static file configuration
-STATIC_EXERCISE_FILE = "app/data/exercise_templates.json"
+STATIC_EXERCISE_FILE = "backend/data/exercise_templates.json"
 
 
 class ExerciseCache:

@@ -13,7 +13,7 @@ Current Status: Placeholder - needs integration with Hevy routine folder API
 
 import logging
 from typing import List, Dict, Any, Optional
-from app.hevy.client import HevyClient
+from backend.hevy.client import HevyClient
 
 logger = logging.getLogger(__name__)
 

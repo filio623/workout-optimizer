@@ -2,10 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
-from app.config import config
-from app.hevy.client import HevyClient
-from app.llm.interface import run_agent_with_session
-from app.services.workout_analyzer import WorkoutAnalyzer
+from backend.config import config
+from backend.hevy.client import HevyClient
+from backend.llm.interface import run_agent_with_session
+from backend.services.workout_analyzer import WorkoutAnalyzer
 from datetime import datetime
 import logfire
 

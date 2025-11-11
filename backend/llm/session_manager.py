@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import List
 from agents import SQLiteSession
-from app.llm.config import DEFAULT_DB_PATH
+from backend.llm.config import DEFAULT_DB_PATH
 
 logger = logging.getLogger(__name__)
 

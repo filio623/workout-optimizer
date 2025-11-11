@@ -2,8 +2,8 @@ import requests
 import logging
 from typing import Optional, Dict, Any, List
 
-from app.config import config
-from app.models import *
+from backend.config import config
+from backend.models import *
 import pprint
 
 logger = logging.getLogger(__name__)
