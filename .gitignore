@@ -47,6 +47,7 @@ Thumbs.db
 .env.*
 secrets.json
 config.json # Only if it contains sensitive data not meant for version control
+!.env.example  # But allow .env.example template to be tracked
 
 # Database files
 *.sqlite
