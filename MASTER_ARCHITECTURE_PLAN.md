@@ -1538,10 +1538,10 @@ class LLMOptimizedDataAccess:
 ### Expo Setup
 
 ```bash
-# Create Expo project
-npx create-expo-app@latest workout-optimizer-mobile --template tabs
+# Create Expo project in mobile/ directory
+npx create-expo-app@latest mobile --template tabs
 
-cd workout-optimizer-mobile
+cd mobile
 
 # Install dependencies
 npx expo install react-native-web react-dom
@@ -1626,7 +1626,7 @@ export const ChatArea: React.FC = () => {
   );
 };
 
-// AFTER: Expo (workout-optimizer-mobile/components/ChatArea.tsx)
+// AFTER: Expo (mobile/components/ChatArea.tsx)
 import React, { useState } from 'react';
 import { View, ScrollView, TextInput } from 'react-native';
 import Markdown from 'react-native-markdown-display';
