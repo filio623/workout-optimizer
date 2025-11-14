@@ -1712,12 +1712,24 @@ export const api = {
 3. ✅ Create database schema with Alembic migrations
 4. ✅ Set up SQLAlchemy models
 5. ✅ Test database connections
+6. ✅ **Phase 1.5 COMPLETE (2025-11-11):** Created FastAPI + PostgreSQL integration
+   - Created `backend/db/database.py` with async session management
+   - Added user profile endpoints (POST/GET)
+   - Verified full stack working (FastAPI → SQLAlchemy → PostgreSQL)
 
 **Success Criteria**:
 - PostgreSQL running and accessible
 - All tables created with proper indexes
 - Can insert and query test data
 - Alembic migrations working
+- ✅ FastAPI endpoints can use PostgreSQL (Phase 1.5)
+
+**Important Note on Chat History (Decision 2025-11-11):**
+- Chat history tables (`chat_sessions`, `chat_messages`) are created in PostgreSQL but NOT YET IN USE
+- Currently using `agents.SQLiteSession` for chat history (temporary)
+- Will migrate chat to PostgreSQL in Phase 2 or Phase 3
+- This phased approach allows focusing on new features (nutrition, health data) first
+- PostgreSQL chat models are ready when we're ready to migrate
 
 **Resources**:
 - [SQLAlchemy 2.0 Tutorial](https://docs.sqlalchemy.org/en/20/tutorial/)
