@@ -3,7 +3,7 @@ SQLAlchemy models for the Workout Optimizer database.
 These define the structure of our database tables.
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, UUID, Numeric, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, UUID, Numeric, func, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -68,6 +68,8 @@ class NutritionDaily(Base):
     """Daily Nutrition Data from MyNetDiary"""
     __tablename__ = 'nutrition_daily'
 
+    __table_args__ = (UniqueConstraint('user_id', 'log_date', name='uix_user_logdate'),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
@@ -81,15 +83,8 @@ class NutritionDaily(Base):
     fats_g = Column(Numeric)
     fiber_g = Column(Numeric)
 
-    #addition info
-    meal_count = Column(Integer)
-
-    # computed fields
-    protein_per_kg_bodyweight = Column(Numeric)
-    calorie_surplus_deficit = Column(Integer)
-
-    #Detailed meal breakdown as JSONB
-    meals = Column(JSONB)
+    # Raw data dump from MyNetDiary (all columns as JSON)
+    raw_data = Column(JSONB)
 
     #Source tracking
     source = Column(String(100), default='mynetdiary')  # e.g., 'MyNetDiary'

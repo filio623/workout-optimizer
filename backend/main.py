@@ -13,6 +13,7 @@ from backend.db.database import get_db
 from backend.db.models import User
 from uuid import UUID
 import logfire
+from backend.routes import nutrition
 
 # Configure Logfire
 if config.LOGFIRE_TOKEN:
@@ -53,6 +54,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(nutrition.router)
 
 @app.get("/")
 async def root():
