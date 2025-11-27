@@ -12,24 +12,7 @@ from sqlalchemy import select
 from backend.db.database import get_db
 from backend.db.models import User
 from uuid import UUID
-import logfire
-from backend.routes import nutrition
-
-# Configure Logfire
-if config.LOGFIRE_TOKEN:
-    logfire.configure(
-        token=config.LOGFIRE_TOKEN,
-        service_name="workout-optimizer"
-    )
-else:
-    # Configure without token for local development
-    logfire.configure(
-        send_to_logfire=False,
-        service_name="workout-optimizer"
-    )
-
-# Instrument OpenAI for automatic agent tracing (must be after configure)
-logfire.instrument_openai()
+from backend.routes import nutrition, apple_health, workouts
 
 # Initialize clients
 hevy_client = HevyClient()
@@ -43,9 +26,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Instrument FastAPI with Logfire
-logfire.instrument_fastapi(app)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:8000", "http://127.0.0.1:8000", "http://127.0.0.1:5173"],
@@ -55,6 +35,8 @@ app.add_middleware(
 )
 
 app.include_router(nutrition.router)
+app.include_router(apple_health.router)
+app.include_router(workouts.router)
 
 @app.get("/")
 async def root():

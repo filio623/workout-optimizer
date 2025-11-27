@@ -85,7 +85,7 @@ class NutritionDaily(Base):
 
     # Raw data dump from MyNetDiary (all columns as JSON)
     raw_data = Column(JSONB)
-
+ 
     #Source tracking
     source = Column(String(100), default='mynetdiary')  # e.g., 'MyNetDiary'
 
@@ -98,6 +98,8 @@ class NutritionDaily(Base):
 class HealthMetricsRaw(Base):
     """Raw Health Metrics from Apple Health (and other sources)"""
     __tablename__ = 'health_metrics_raw'
+
+    __table_args__ = (UniqueConstraint('user_id', 'source', 'metric_date', 'metric_type', name='uix_user_metric_datetime_type'),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
@@ -115,7 +117,9 @@ class HealthMetricsRaw(Base):
 class HealthMetricsDaily(Base):
     """Aggregated Daily Health Metrics"""
     __tablename__ = 'health_metrics_daily'
-    
+
+    __table_args__ = (UniqueConstraint('user_id', 'metric_date', name='uix_user_metric_date'),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
@@ -123,11 +127,15 @@ class HealthMetricsDaily(Base):
 
     # Common health metrics (pre-aggregated)
     steps = Column(Integer)
-    weight_kg = Column(Numeric)
+    weight_lbs = Column(Numeric)  # Changed from weight_kg to match Apple Health export
     active_calories = Column(Integer)
     resting_heart_rate = Column(Numeric)
-    sleep_hours = Column(Numeric)
-    distance_meters = Column(Numeric)
+    distance_miles = Column(Numeric)  # Changed from distance_meters to match Apple Health
+
+    # Activity time metrics
+    workout_minutes = Column(Integer)  # Total workout time (all workouts including walks, bike rides)
+    exercise_minutes = Column(Integer)  # Apple Exercise Time (moderate+ intensity)
+    stand_minutes = Column(Integer)  # Apple Stand Time
 
     #flexible storage for additional metrics we may add later
     additional_metrics = Column(JSONB, default={})
@@ -142,6 +150,8 @@ class WorkoutCache(Base):
     """Cached Workout Data from Hevy"""
     __tablename__ = 'workout_cache'
 
+    __table_args__ = (UniqueConstraint('user_id', 'source', 'source_workout_id', name='uix_user_source_workout'),)
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
@@ -154,7 +164,8 @@ class WorkoutCache(Base):
     title = Column(String(200))
     duration_minutes = Column(Integer)
     total_sets = Column(Integer)
-    total_volume_kg = Column(Numeric)
+    total_volume_kg = Column(Numeric)  # Volume for weighted exercises only
+    bodyweight_reps = Column(Integer)  # Total reps for bodyweight exercises
     exercise_count = Column(Integer)
     calories_burned = Column(Integer)
     muscle_groups = Column(JSONB)  # List of muscle groups worked
