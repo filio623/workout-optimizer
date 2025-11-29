@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-11-27 (Session 7 Complete)
-**Current Phase:** Phase 2 - Part 5 Complete ✅ (Hevy Workout Caching)
-**Status:** Workout caching system operational with UPSERT deduplication. All data sources cached locally.
+**Last Updated:** 2025-11-28 (Session 8 Complete)
+**Current Phase:** Phase 2 - Part 6 Complete ✅ (MCP Integration)
+**Status:** Model Context Protocol integration complete. Hevy data accessible via standardized MCP tools.
 
 ---
 
@@ -262,17 +262,46 @@ Workout_Optimizer/
 - **Key Learning:** Caching patterns, volume calculation standards, UPSERT for idempotent operations, weighted vs bodyweight exercise tracking
 - **IMPORTANT NOTE:** Currently using custom HevyClient (REST API). **MCP migration is planned and critical** - will replace with chrisdoc/hevy-mcp server for standardized integration
 
+### Session 8: MCP (Model Context Protocol) Integration (Complete ✅)
+- **Goal:** Replace custom REST client with standardized MCP protocol for Hevy integration
+- **Deep dive learning session:** MCP fundamentals, stdio communication, JSON-RPC protocol
+- **Discovered issue:** hevy-mcp server has stdout pollution (dotenvx + console.log statements)
+- **Solution:** Forked hevy-mcp, removed 3 lines causing pollution, submitted PR to upstream
+- **What we learned:**
+  - MCP is "USB for AI apps" - standardizes data source connections
+  - MCP servers run as local subprocesses, not remote services
+  - stdio transport uses pipes (stdin/stdout) for JSON-RPC messages
+  - Tool discovery happens at runtime via `list_tools`
+  - Clean stdout is critical for stdio protocol
+- **Implementation:**
+  - Bundled patched hevy-mcp server in `backend/mcp_servers/hevy-mcp/`
+  - Created `mcp_hevy.py` service helper for easy integration
+  - Created `test_mcp_connection.py` to verify functionality
+  - Added setup script for node_modules installation
+  - Documented everything in README files
+- **Testing results:**
+  - ✅ Successfully connected to MCP server via stdio
+  - ✅ Discovered 18 tools dynamically
+  - ✅ Called `get-workouts` tool and retrieved real data
+  - ✅ Field name difference: camelCase (MCP) vs snake_case (REST API)
+- **Open source contribution:**
+  - Forked chrisdoc/hevy-mcp on GitHub
+  - Created feature branch: `fix/stdio-stdout-pollution`
+  - Submitted PR with detailed explanation and testing notes
+- **Key Learning:** MCP protocol architecture, stdio debugging, open source contribution workflow, subprocess management, JSON-RPC communication
+- **Next step:** Refactor `workout_service.py` to use MCP instead of custom HevyClient
+
 ---
 
 ## 🚀 Next Session Options
 
-### Option 1: MCP Integration for Hevy (HIGH PRIORITY - Technical Debt)
-**Why:** Replace custom REST client with standardized MCP server
-- Install and configure [chrisdoc/hevy-mcp](https://github.com/chrisdoc/hevy-mcp) Docker container
-- Replace `HevyClient` calls in `workout_service.py` with MCP protocol
-- **Benefits:** Standardized interface, better maintained, follows MCP best practices
-- **Scope:** Small refactor (~10-15 minutes), only changes data fetching layer
-- **Current blocker:** Custom HevyClient is temporary solution, MCP is the architectural goal
+### Option 1: Complete MCP Migration (IN PROGRESS - Next Task)
+**Why:** Finish replacing custom REST client with MCP in production code
+- Refactor `workout_service.py` to use `mcp_hevy.py` helper
+- Handle camelCase → snake_case field name conversion
+- Test with real workout sync endpoint
+- **Benefits:** Cleaner code, standardized interface, community-maintained
+- **Status:** MCP server bundled and tested, ready for production integration
 
 ### Option 2: Data Analytics Endpoints
 **Why:** Make the ingested data actionable

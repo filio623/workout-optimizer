@@ -76,3 +76,6 @@ dump.rdb
 /docs/
 # Sample data files (personal data)
 sample_data/
+
+# MCP server dependencies (large, should be installed via npm/setup script)
+backend/mcp_servers/*/node_modules/

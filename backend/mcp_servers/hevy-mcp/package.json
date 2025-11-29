@@ -1,0 +1,92 @@
+{
+	"name": "hevy-mcp",
+	"version": "1.12.5",
+	"main": "dist/index.js",
+	"module": "src/index.ts",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"access": "public",
+	"bugs": {
+		"url": "https://github.com/chrisdoc/hevy-mcp/issues"
+	},
+	"homepage": "https://github.com/chrisdoc/hevy-mcp#readme",
+	"bin": {
+		"hevy-mcp": "dist/index.js"
+	},
+	"scripts": {
+		"inspect": "pnpm run build && pnpm dlx @modelcontextprotocol/inspector@latest node dist/index.js",
+		"test": "vitest --run",
+		"export-specs": "node ./scripts/export-openapi-spec.js",
+		"build": "tsup",
+		"build:client": "kubb generate",
+		"start": "node dist/index.js",
+		"dev": "tsx watch --clear-screen=false src/index.ts",
+		"smithery:build": "smithery build",
+		"smithery:dev": "smithery dev",
+		"check": "biome check --write --unsafe",
+		"check:types": "tsc --noEmit",
+		"version:patch": "pnpm version patch",
+		"version:minor": "pnpm version minor",
+		"version:major": "pnpm version major",
+		"release": "semantic-release",
+		"commit": "commit"
+	},
+	"type": "module",
+	"keywords": [
+		"mcp",
+		"hevy",
+		"fitness",
+		"api",
+		"model context protocol"
+	],
+	"author": "Christoph Kieslich",
+	"license": "MIT",
+	"description": "A Model Context Protocol (MCP) server implementation that interfaces with the Hevy fitness tracking app and its API.",
+	"dependencies": {
+		"@dotenvx/dotenvx": "^1.51.1",
+		"@kubb/cli": "^4.5.9",
+		"@kubb/core": "^4.5.9",
+		"@kubb/plugin-client": "^4.5.9",
+		"@kubb/plugin-faker": "^4.5.9",
+		"@kubb/plugin-oas": "^4.5.9",
+		"@kubb/plugin-ts": "^4.5.9",
+		"@kubb/plugin-zod": "^4.5.9",
+		"@modelcontextprotocol/sdk": "^1.22.0",
+		"@smithery/sdk": "1.7.4",
+		"axios": "^1.13.2",
+		"chalk": "^5.3.0",
+		"cors": "^2.8.5",
+		"express": "4.21.2",
+		"zod": "^3.25.76"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.7",
+		"@commitlint/cli": "^20.1.0",
+		"@commitlint/config-conventional": "^20.0.0",
+		"@commitlint/prompt-cli": "^20.1.0",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^13.0.1",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^12.0.2",
+		"@semantic-release/npm": "^13.1.2",
+		"@semantic-release/release-notes-generator": "^14.1.0",
+		"@smithery/cli": "^1.6.3",
+		"@types/node": "^24.10.1",
+		"@vitest/coverage-v8": "^4.0.10",
+		"abstract-syntax-tree": "^2.22.0",
+		"cross-env": "^10.1.0",
+		"lefthook": "^2.0.4",
+		"semantic-release": "^25.0.2",
+		"tsup": "^8.5.1",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.10"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
+}
