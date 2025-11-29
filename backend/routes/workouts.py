@@ -17,7 +17,7 @@ TEST_USER_ID = "2ae24e52-8440-4551-836b-7e2cd9ec45d5"  # Use a fixed test user I
 
 @router.post("/sync")
 async def sync_workouts(
-    page_size: int = Query(default=100, description="Number of workouts to fetch from Hevy"),
+    page_size: int = Query(default=10, description="Number of workouts to fetch from Hevy (max 10)"),
     db: AsyncSession = Depends(get_db)
 ):
     """

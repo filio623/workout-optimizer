@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-11-28 (Session 8 Complete)
-**Current Phase:** Phase 2 - Part 6 Complete ✅ (MCP Integration)
-**Status:** Model Context Protocol integration complete. Hevy data accessible via standardized MCP tools.
+**Last Updated:** 2025-11-29 (Session 9 Complete)
+**Current Phase:** Phase 2 - Complete ✅ (Data Ingestion & MCP Integration)
+**Status:** MCP migration complete! All workout syncing now using standardized Model Context Protocol.
 
 ---
 
@@ -260,9 +260,9 @@ Workout_Optimizer/
 - **Current cache:** 475 total workouts (10 Hevy + 465 Apple Health)
 - Fixed timezone issues (aware → naive UTC for PostgreSQL compatibility)
 - **Key Learning:** Caching patterns, volume calculation standards, UPSERT for idempotent operations, weighted vs bodyweight exercise tracking
-- **IMPORTANT NOTE:** Currently using custom HevyClient (REST API). **MCP migration is planned and critical** - will replace with chrisdoc/hevy-mcp server for standardized integration
+- **Note:** Initially used custom HevyClient (REST API), replaced with MCP in Session 9
 
-### Session 8: MCP (Model Context Protocol) Integration (Complete ✅)
+### Session 8: MCP (Model Context Protocol) - Setup & Learning (Complete ✅)
 - **Goal:** Replace custom REST client with standardized MCP protocol for Hevy integration
 - **Deep dive learning session:** MCP fundamentals, stdio communication, JSON-RPC protocol
 - **Discovered issue:** hevy-mcp server has stdout pollution (dotenvx + console.log statements)
@@ -288,22 +288,42 @@ Workout_Optimizer/
   - Forked chrisdoc/hevy-mcp on GitHub
   - Created feature branch: `fix/stdio-stdout-pollution`
   - Submitted PR with detailed explanation and testing notes
+  - **✅ PR MERGED!** Fixes now in official hevy-mcp package
 - **Key Learning:** MCP protocol architecture, stdio debugging, open source contribution workflow, subprocess management, JSON-RPC communication
-- **Next step:** Refactor `workout_service.py` to use MCP instead of custom HevyClient
+
+### Session 9: MCP Production Migration (Complete ✅)
+- **Goal:** Complete the refactoring of workout_service.py to use MCP in production
+- **Challenges encountered:**
+  1. **Async context issues** - FastAPI + MCP async generators incompatible
+     - Solution: Use direct `async with` context managers instead of generator pattern
+  2. **Page size validation** - MCP server max is 10, not 100
+     - Solution: Changed default from 100 → 10, added `isError` flag checking
+  3. **Import organization** - MCP imports needed at module level
+     - Solution: Moved imports to top of file for proper async/await handling
+- **Production implementation:**
+  - Refactored `sync_hevy_workouts()` to use stdio_client and ClientSession directly
+  - Added proper error handling for MCP validation errors (`result.isError`)
+  - Maintained backward compatibility for field names (camelCase and snake_case)
+  - Removed deprecated `mcp_hevy.py` helper (using direct integration instead)
+  - Cleaned up debug code and traceback prints
+- **Testing & Verification:**
+  - ✅ Successfully synced 10 workouts via MCP
+  - ✅ UPSERT logic working (8 duplicates updated, 2 new inserted)
+  - ✅ Database verified: 477 total workouts, 6,754 kg volume
+  - ✅ `/workouts/sync`, `/workouts/cached`, `/workouts/stats` all working
+- **Architecture improvements:**
+  - Subprocess spawned per request (isolated, no state leaks)
+  - Standardized protocol replaces custom REST client
+  - Community-maintained hevy-mcp server handles API changes
+  - All 18 MCP tools available for future features
+- **Key Learning:** FastAPI async context management, MCP error handling, subprocess lifecycle, production integration patterns
+- **Outcome:** Phase 2 (Data Ingestion & MCP Integration) fully complete!
 
 ---
 
 ## 🚀 Next Session Options
 
-### Option 1: Complete MCP Migration (IN PROGRESS - Next Task)
-**Why:** Finish replacing custom REST client with MCP in production code
-- Refactor `workout_service.py` to use `mcp_hevy.py` helper
-- Handle camelCase → snake_case field name conversion
-- Test with real workout sync endpoint
-- **Benefits:** Cleaner code, standardized interface, community-maintained
-- **Status:** MCP server bundled and tested, ready for production integration
-
-### Option 2: Data Analytics Endpoints
+### Option 1: Data Analytics Endpoints (Recommended Next)
 **Why:** Make the ingested data actionable
 - `/nutrition/stats` - averages, trends, correlations
 - `/health/trends` - weight, heart rate, activity over time
@@ -311,13 +331,13 @@ Workout_Optimizer/
 - Query by date range, compare weeks/months
 - Foundation for AI recommendations
 
-### Option 3: User Authentication
+### Option 2: User Authentication
 **Why:** Replace test user with real auth
 - JWT token-based authentication
 - Secure endpoints with user context
 - Enable multi-user support
 
-### Option 4: Frontend Integration
+### Option 3: Frontend Integration
 **Why:** Visualize the data
 - Connect React frontend to backend
 - Display nutrition timeline, health trends, workout history
@@ -378,8 +398,8 @@ curl -X POST http://localhost:8005/nutrition/upload \
 
 ## 📈 Progress Metrics
 
-**Total Sessions:** 7
-**Total Time:** ~25-30 hours (including learning, design discussions, debugging)
+**Total Sessions:** 9
+**Total Time:** ~30-35 hours (including learning, design discussions, debugging)
 **Code Written:** ~1000 lines of production code
 **Tests Passed:** End-to-end pipeline working with real data from multiple sources
 **Data Ingested:**
@@ -396,4 +416,4 @@ curl -X POST http://localhost:8005/nutrition/upload \
 
 ---
 
-**Current Status:** 🟢 Phase 2 Data Ingestion Complete! Multi-source data pipeline operational with nutrition, health metrics, and workout caching. **Next priority: MCP migration for Hevy integration**. Ready for analytics (Phase 3) after MCP refactor.
+**Current Status:** 🟢 **Phase 2 Complete!** Multi-source data pipeline operational with nutrition (279 days), health metrics (740 days + 55K time-series), and workout caching (477 workouts). MCP integration complete - all Hevy syncing now using standardized protocol. **Ready for Phase 3: Data Analytics & AI Integration**.
