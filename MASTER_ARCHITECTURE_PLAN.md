@@ -1797,41 +1797,70 @@ curl -X POST http://localhost:8000/upload/nutrition \
 
 ---
 
-### Phase 3: Pydantic AI & MCP Integration (Week 3)
+### Phase 3: Pydantic AI & MCP Integration (Week 3) - UPDATED 2025-12-08
 
-**Learning Focus**: Pydantic AI, MCP, Agentic workflows
+**Learning Focus**: Pydantic AI, Agent architecture patterns, Tool orchestration
+
+**Architectural Decision (Session 10):**
+- **Framework:** Pydantic AI (type-safe, model-agnostic, MCP-native)
+- **Pattern:** Single Agent with Parallel Tool Processing
+- **Rationale:** Start simple for learning, iterate to complex (supervisor pattern) in Phase 5+ if needed
 
 **Tasks**:
-1. ✅ Install Pydantic AI and dependencies
-2. ✅ Create basic agent with system prompt
-3. ✅ Port existing tools to Pydantic AI format
-4. ✅ Set up Hevy MCP server (Docker)
-5. ✅ Create MCP client wrapper
-6. ✅ Integrate MCP tools with agent
-7. ✅ Test agent with real conversations
-8. ✅ Implement session management
-9. ✅ Delete old OpenAI Agents code
+1. ✅ **Session 10:** Cleanup legacy code (backend/hevy, old agents library)
+2. ✅ **Session 10:** Install Pydantic AI and dependencies (already installed)
+3. ✅ **Session 10:** Create backend/agents/ structure (agent.py, dependencies.py, tools/)
+4. ✅ **Session 10:** Build first agent with core tools (2 tools: nutrition_stats, recent_workouts)
+5. ✅ **Session 10:** Add /chat endpoint to FastAPI (POST /chat)
+6. ✅ **Session 10:** Test with real data (140 days nutrition, agent working!)
+7. ⏳ **Session 11:** Port 8-12 additional tools from backend/llm/tools/
+8. ⏳ **Session 12:** Integrate Hevy MCP tools with agent
+9. ⏳ **Session 13:** Implement streaming responses
+10. ⏳ **Session 13:** Test agent with complex multi-source queries
+11. ⏳ **Session 14:** Optimize context management and session persistence
 
-**Success Criteria**:
-- Agent responds to queries
-- Can call custom tools (nutrition analysis, etc.)
-- Can call MCP tools (get workouts from Hevy)
-- Conversation history persists
-- Can switch between GPT and Claude
+**Session 10 Accomplishments:**
+- ✅ Legacy code removed (`backend/hevy/`, commented out `workout_analyzer`)
+- ✅ Agent responds to queries with type-safe tools
+- ✅ Can call custom database tools (nutrition ✓, workouts ✓)
+- ✅ Parallel tool execution working (async tools with RunContext)
+- ✅ HTTP endpoint functional (`/chat`)
+- ✅ Tested with real queries ("average protein last 7 days" → "131.3g/day")
+
+**Remaining Success Criteria**:
+- ⏳ Port more tools from backend/llm/tools/
+- ⏳ Can call MCP tools (get workouts from Hevy via MCP)
+- ⏳ Conversation history persists in PostgreSQL (currently using temp session)
+- ⏳ Can switch between Claude and GPT-4 (currently hardcoded to Claude)
 
 **Resources**:
 - [Pydantic AI Docs](https://ai.pydantic.dev/)
+- [Pydantic AI GitHub Examples](https://github.com/pydantic/pydantic-ai/tree/main/examples)
 - [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [Hevy MCP Server](https://github.com/chrisdoc/hevy-mcp)
 
-**Test Queries**:
+**Test Queries** (Progressive complexity):
 ```
-"Show me my workouts from last week"
+Session 10-11:
+"What was my average protein intake last week?"
+"Show me my total workout volume for November"
+
+Session 12:
+"Show me my workouts from last week" (uses MCP)
 "Analyze my nutrition for the past month"
-"I'm not gaining muscle, what's wrong?"
-"Create a 4-day upper/lower split for me"
-"Has my bench press plateaued?"
+
+Session 13:
+"I'm not gaining muscle, what's wrong?" (multi-domain analysis)
+"Has my bench press plateaued?" (needs plateau detection)
+"Create a 4-day upper/lower split for me" (program generation)
 ```
+
+**Implementation Notes**:
+- Start with 3-5 tools, test thoroughly, then expand
+- Tools organized by domain (Nutrition, Workout, Health, Analysis)
+- Use RunContext[Dependencies] for DB session injection
+- Parallel execution with asyncio.gather() for multi-source queries
+- May migrate to Hierarchical Supervisor pattern in Phase 5 if agent struggles with 20+ tools
 
 ---
 

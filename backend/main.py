@@ -3,9 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 from backend.config import config
-from backend.hevy.client import HevyClient
 #from backend.llm.interface import run_agent_with_session
-from backend.services.workout_analyzer import WorkoutAnalyzer
+#from backend.services.workout_analyzer import WorkoutAnalyzer
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -14,9 +13,8 @@ from backend.db.models import User
 from uuid import UUID
 from backend.routes import nutrition, apple_health, workouts
 
-# Initialize clients
-hevy_client = HevyClient()
-workout_analyzer = WorkoutAnalyzer()
+# Initialize analyzers
+#workout_analyzer = WorkoutAnalyzer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -74,68 +72,37 @@ class UserProfileResponse(BaseModel):
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
-@app.get("/api/workout-frequency")
-def workout_frequency():
-    try:
-        data = workout_analyzer.get_weekly_workout_counts()
-        return {'data': data}
-    except ConnectionError:
-        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+# @app.get("/api/workout-frequency")
+# def workout_frequency():
+#     try:
+#         data = workout_analyzer.get_weekly_workout_counts()
+#         return {'data': data}
+#     except ConnectionError:
+#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/api/top-exercises")
-def top_exercises():
-    try:
-        data = workout_analyzer.get_top_exercises()
-        return {'data': data}
-    except ConnectionError:
-        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+# @app.get("/api/top-exercises")
+# def top_exercises():
+#     try:
+#         data = workout_analyzer.get_top_exercises()
+#         return {'data': data}
+#     except ConnectionError:
+#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/api/top-muscle-groups")
-def top_muscle_groups():
-    try:
-        data = workout_analyzer.get_top_muscle_groups()
-        return {'data': data}
-    except ConnectionError:
-        raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+# @app.get("/api/top-muscle-groups")
+# def top_muscle_groups():
+#     try:
+#         data = workout_analyzer.get_top_muscle_groups()
+#         return {'data': data}
+#     except ConnectionError:
+#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/workout-history")
-async def workout_history():
-    try:
-        data = hevy_client.get_workouts(page_size=7).model_dump(mode="json")
-        workouts = data['workouts'][:7]
-
-        formatted_workouts = []
-        for workout in workouts:
-            start_time = datetime.fromisoformat(workout['start_time'])
-            end_time = datetime.fromisoformat(workout['end_time'])
-            duration_seconds = (end_time - start_time).total_seconds()
-            duration_minutes = int(duration_seconds / 60)
-            duration_hours = int(duration_minutes / 60)
-
-            # Format duration to show only relevant units
-            if duration_hours > 0:
-                duration_str = f"{duration_hours} hours, {duration_minutes % 60} minutes"
-            else:
-                duration_str = f"{duration_minutes} minutes"
-
-            total_sets = sum(len(exercise['sets']) for exercise in workout['exercises'])
-
-            formatted_workouts.append({
-                'id': workout['id'],
-                'title': workout['title'],
-                'date': start_time.isoformat(),
-                'duration': duration_str,
-                'sets': total_sets,
-            })
-        return formatted_workouts
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+# Note: /workout-history endpoint removed - use /workouts/cached instead (MCP-based caching)
     
 @app.post("/user/profile", response_model=UserProfileResponse)
 async def create_user_profile(user_data: UserProfileCreate, db: AsyncSession = Depends(get_db)):
@@ -187,6 +154,34 @@ async def get_user_profile(user_id: str, db: AsyncSession = Depends(get_db)):
 
 # Note: /analyze endpoint removed - analysis is now handled through AI chat interface
 
+@app.post("/chat")
+async def chat(request: ChatRequest, db: AsyncSession = Depends(get_db)):
+    """Chat endpoint with Pydantic AI agent and session management.
+    
+    The agent has access to:
+     - Nutrition data queries
+     - Workout data queries
+     - More to be added...
+     """
+    try:
+        from backend.agents.agent import agent
+        from backend.agents.dependencies import AgentDependencies
+
+        TEST_USER_ID = "2ae24e52-8440-4551-836b-7e2cd9ec45d5"
+
+        deps = AgentDependencies(
+            db=db,
+            user_id=TEST_USER_ID
+        )
+
+        result = await agent.run(request.message, deps=deps)
+
+        return ChatResponse(
+            response=result.output,
+            session_id=request.session_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

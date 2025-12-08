@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-11-29 (Session 9 Complete)
-**Current Phase:** Phase 2 - Complete ✅ (Data Ingestion & MCP Integration)
-**Status:** MCP migration complete! All workout syncing now using standardized Model Context Protocol.
+**Last Updated:** 2025-12-08 (Session 10 Complete)
+**Current Phase:** Phase 3 - In Progress (Pydantic AI Agent Implementation)
+**Status:** First Pydantic AI agent working! Agent can query nutrition and workout data, respond intelligently via /chat endpoint.
 
 ---
 
@@ -82,10 +82,10 @@ docker exec -it workout_optimizer_db psql -U postgres -d workout_optimizer
 
 **✅ FastAPI Backend (Port 8005)**
 - `/nutrition/upload` - Upload MyNetDiary Excel files
-- `/workout-history` - Get recent workouts from Hevy
-- `/api/workout-frequency` - Weekly workout counts
-- `/api/top-exercises` - Most frequent exercises
+- `/workouts/sync` - Sync Hevy workouts via MCP
+- `/workouts/cached` - Get cached workouts
 - `/user/profile` - Create/retrieve user profiles
+- **`/chat`** - Chat with Pydantic AI agent (NEW in Session 10!)
 
 **✅ Data Ingestion Pipeline**
 - MyNetDiary parser: Extracts 117 nutrition columns from Excel
@@ -114,8 +114,8 @@ docker exec -it workout_optimizer_db psql -U postgres -d workout_optimizer
 ### Current Data in Database
 
 **Nutrition Data:**
-- **279 days** logged (2023: 21 days, 2024: 131 days, 2025: 127 days)
-- **Average intake:** 1,453 cal/day, 117g protein/day
+- **140 days** logged for 2025 (Jan 18 - Dec 8, 2025)
+- **Recent average (last 6 days):** 1,526 cal/day, 131.3g protein/day
 - **100% raw data coverage** (all 117 columns preserved)
 
 **Apple Health Data:**
@@ -175,6 +175,12 @@ docker exec -it workout_optimizer_db psql -U postgres -d workout_optimizer
 ```
 Workout_Optimizer/
 ├── backend/
+│   ├── agents/                # NEW! Pydantic AI agent system
+│   │   ├── agent.py           # Main agent (Claude 3.5 Sonnet)
+│   │   ├── dependencies.py    # Dependency injection
+│   │   └── tools/
+│   │       ├── nutrition_tools.py  # Nutrition query tools
+│   │       └── workout_tools.py    # Workout query tools
 │   ├── db/
 │   │   ├── models.py          # SQLAlchemy models (7 tables)
 │   │   ├── database.py        # Session management
@@ -190,10 +196,13 @@ Workout_Optimizer/
 │   │   ├── nutrition.py       # Nutrition upload endpoint
 │   │   ├── apple_health.py    # Apple Health upload endpoint
 │   │   └── workouts.py        # Workout sync/cache endpoints
+│   ├── llm/                   # Legacy (OpenAI Agents SDK - keeping for reference)
+│   ├── mcp_servers/           # Hevy MCP server bundle
 │   ├── alembic/
 │   │   └── versions/          # 5 migrations applied
-│   ├── main.py                # FastAPI app (port 8005)
+│   ├── main.py                # FastAPI app (port 8005) with /chat endpoint
 │   ├── config.py              # Environment variables
+│   ├── test_agent.py          # Test script for Pydantic AI agent
 │   └── create_test_user.py    # Test user creation script
 ├── sample_data/
 │   ├── my_net_diary/          # Excel files (2023-2025)
@@ -321,37 +330,134 @@ Workout_Optimizer/
 
 ---
 
-## 🚀 Next Session Options
+## 🎯 Phase 3 - Pydantic AI Agent (STARTING - Session 10)
 
-### Option 1: Data Analytics Endpoints (Recommended Next)
-**Why:** Make the ingested data actionable
-- `/nutrition/stats` - averages, trends, correlations
-- `/health/trends` - weight, heart rate, activity over time
-- `/workout/analysis` - volume, frequency, progression
-- Query by date range, compare weeks/months
-- Foundation for AI recommendations
+### Architectural Decisions (2025-12-07)
 
-### Option 2: User Authentication
-**Why:** Replace test user with real auth
-- JWT token-based authentication
-- Secure endpoints with user context
-- Enable multi-user support
+**Framework Choice: Pydantic AI** ✅
+- **Why not OpenAI Agents SDK:** Vendor lock-in to OpenAI, less flexible
+- **Why not LangGraph:** Too complex for initial implementation, steeper learning curve
+- **Why Pydantic AI:**
+  - ✅ Model-agnostic (Claude, GPT-4, Gemini)
+  - ✅ Native MCP support (works with our existing Hevy integration)
+  - ✅ Type-safe with Pydantic (matches our FastAPI stack)
+  - ✅ Built-in streaming for better UX
+  - ✅ Dependency injection for database sessions
 
-### Option 3: Frontend Integration
-**Why:** Visualize the data
-- Connect React frontend to backend
-- Display nutrition timeline, health trends, workout history
-- Upload interface for Excel/JSON files
+**Agent Architecture: Single Agent with Parallel Tool Processing** ✅
+- **Pattern:** One coordinating agent with organized tools, parallel execution
+- **Why not Hierarchical Supervisor (yet):**
+  - Start simple for learning phase
+  - Most queries need multiple domains (nutrition + workout + health)
+  - Faster to implement and debug
+  - Can migrate to supervisor pattern in Phase 5 if needed
+- **Future Evolution:** May refactor to Hierarchical Agent Teams when we have 20+ tools
+
+**Implementation Approach:**
+1. **Incremental learning** - Start simple, iterate to complex
+2. **Phase 3a-3b:** Cleanup legacy code, install Pydantic AI
+3. **Phase 3c-3d:** Build single agent with 5-8 core tools
+4. **Phase 3e:** Port remaining tools as needed
+5. **Phase 4+:** Consider supervisor pattern if complexity increases
+
+### Session 10: Pydantic AI Agent Foundation (Complete ✅)
+
+**Goal:** Build the first working Pydantic AI agent with tool calling and FastAPI integration
+
+**What We Built:**
+1. ✅ **Cleaned up legacy code:**
+   - Removed `backend/hevy/` (old REST client)
+   - Removed `tests/legacy/` directory
+   - Commented out old `workout_analyzer` endpoints in main.py
+   - Identified legacy `backend/llm/` code (keeping for reference)
+
+2. ✅ **Installed Pydantic AI:**
+   - Pydantic AI v1.0.1 with OpenAI + Anthropic support
+   - Already installed (discovered during setup)
+
+3. ✅ **Created agent architecture:**
+   - `backend/agents/agent.py` - Main agent with Claude 3.5 Sonnet
+   - `backend/agents/dependencies.py` - Dependency injection (db, user_id)
+   - `backend/agents/tools/nutrition_tools.py` - Nutrition queries
+   - `backend/agents/tools/workout_tools.py` - Workout queries
+
+4. ✅ **Built 2 working tools:**
+   - `get_nutrition_stats(days)` - Queries nutrition_daily table, calculates averages
+   - `get_recent_workouts(limit)` - Queries workout_cache table
+
+5. ✅ **Created `/chat` endpoint:**
+   - FastAPI endpoint at POST `/chat`
+   - Accepts: `{"message": "...", "session_id": "..."}`
+   - Returns: `{"response": "...", "session_id": "..."}`
+   - Integrates with Pydantic AI agent via dependency injection
+
+6. ✅ **Tested with real data:**
+   - Uploaded 140 days of new MyNetDiary nutrition data (Jan-Dec 2025)
+   - Agent successfully queried database and returned accurate averages
+   - Test query: "What was my average protein intake over the last 7 days?"
+   - Result: "131.3 g per day" (from 6 logged days)
+
+**Key Technical Learnings:**
+
+**Pydantic AI Concepts:**
+- `@agent.tool` decorator registers functions with the agent
+- `RunContext[AgentDependencies]` provides dependency injection
+- Tools receive context automatically, agent decides which tools to call
+- Docstrings are critical - agent reads them to understand tool usage
+- `await agent.run(message, deps=deps)` executes the agent
+
+**Architecture Pattern:**
+- Single agent with parallel tool processing (simpler than hierarchical)
+- Tools organized by domain (nutrition, workout, health)
+- Agent powered by Claude 3.5 Sonnet (better reasoning than GPT-4)
+- Database session injected via FastAPI `Depends(get_db)`
+
+**Debugging Wins:**
+- Fixed `datetime.now(UTC)` for Python 3.11+ (modern best practice)
+- Fixed async/await in tools (must be async def, must await db queries)
+- Fixed typo in label access (`row.day_count` not `row.day.count`)
+- Remembered to restart server after adding endpoint! 😄
+
+**Success Metrics:**
+- ✅ Agent responds intelligently to natural language queries
+- ✅ Parallel tool calling working (can query multiple sources)
+- ✅ Type-safe tools with Pydantic validation
+- ✅ Real database queries with proper async handling
+- ✅ HTTP endpoint working for frontend integration
+
+---
+
+## 🚀 Upcoming Sessions (Phase 3 Roadmap)
+
+### Session 11: Expand Agent Tools
+- Port 8-12 additional tools from `backend/llm/tools/`
+- Add analysis tools (plateau detection, correlation analysis)
+- Implement proper context management
+
+### Session 12: MCP Integration with Agent
+- Connect agent to Hevy MCP tools
+- Enable queries like "Show my workouts from last week"
+- Test multi-source data queries
+
+### Session 13: Streaming & UX
+- Implement streaming responses
+- Add typing indicators
+- Optimize response times
+
+### Later: Consider Supervisor Pattern (if needed)
+- Evaluate if single agent struggles with 20+ tools
+- Implement hierarchical architecture if accuracy issues appear
 
 ---
 
 ## 🐛 Known Issues / Tech Debt
 
-1. **Test User Hardcoded** - Need proper authentication (Phase 4)
-2. **No Error Handling for Malformed Excel** - Parser assumes correct format
-3. **No File Size Limits** - Upload endpoint accepts any size file
-4. **No Data Validation** - Trust parser output without validation
-5. **Timezone Handling** - Dates assume UTC, no timezone conversion
+1. **Legacy Code Present** - `backend/hevy/`, `backend/llm/` use old agents library (Session 10 cleanup)
+2. **Test User Hardcoded** - Need proper authentication (Phase 4)
+3. **No Error Handling for Malformed Excel** - Parser assumes correct format
+4. **No File Size Limits** - Upload endpoint accepts any size file
+5. **No Data Validation** - Trust parser output without validation
+6. **Timezone Handling** - Dates assume UTC, no timezone conversion
 
 ---
 
@@ -398,8 +504,8 @@ curl -X POST http://localhost:8005/nutrition/upload \
 
 ## 📈 Progress Metrics
 
-**Total Sessions:** 9
-**Total Time:** ~30-35 hours (including learning, design discussions, debugging)
+**Total Sessions:** 10 (in progress)
+**Total Time:** ~32-37 hours (including learning, design discussions, debugging)
 **Code Written:** ~1000 lines of production code
 **Tests Passed:** End-to-end pipeline working with real data from multiple sources
 **Data Ingested:**
@@ -416,4 +522,4 @@ curl -X POST http://localhost:8005/nutrition/upload \
 
 ---
 
-**Current Status:** 🟢 **Phase 2 Complete!** Multi-source data pipeline operational with nutrition (279 days), health metrics (740 days + 55K time-series), and workout caching (477 workouts). MCP integration complete - all Hevy syncing now using standardized protocol. **Ready for Phase 3: Data Analytics & AI Integration**.
+**Current Status:** 🟡 **Phase 3 Starting!** Multi-source data pipeline operational. Now building Pydantic AI agent with single-agent + parallel tool processing architecture. Starting with cleanup and foundation work in Session 10.
