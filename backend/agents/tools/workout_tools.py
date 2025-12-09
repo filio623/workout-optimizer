@@ -22,55 +22,57 @@ async def get_recent_workouts(
 ) -> List[Dict]:
     """
     Get the user's most recent workouts from the cache.
-    
+
     This tool queries the workout_cache table which contains workouts from
     both Hevy (via MCP) and Apple Health. Returns workout summaries with
     date, duration, volume, and exercise count.
-    
+
     Args:
-        ctx: The run context containing db session and user_id
+        ctx: The run context containing session_factory and user_id
         limit: Maximum number of workouts to return (default: 10)
-    
+
     Returns:
         List of workout dictionaries, ordered by date (newest first)
         Example: [{
             "title": "Upper Body Day",
             "date": "2025-12-07",
             "duration_minutes": 65,
-            "total_volume_kg": 4250.5,
+            "total_volume_lbs": 4250.5,
             "exercise_count": 6,
             "total_sets": 24
         }, ...]
     """
 
-    # Query the database
-    stmt = (
-        select(WorkoutCache)
-        .where(WorkoutCache.user_id == ctx.deps.user_id)
-        .order_by(WorkoutCache.workout_date.desc())
-        .limit(limit)
-    )
+    # Create own database session for parallel execution
+    async with ctx.deps.session_factory() as db:
+        # Query the database
+        stmt = (
+            select(WorkoutCache)
+            .where(WorkoutCache.user_id == ctx.deps.user_id)
+            .order_by(WorkoutCache.workout_date.desc())
+            .limit(limit)
+        )
 
-    result = await ctx.deps.db.execute(stmt)
-    workouts = result.scalars().all()
+        result = await db.execute(stmt)
+        workouts = result.scalars().all()
 
-    #Format the results
-    formatted_workouts = []
-    for workout in workouts:
-        # Convert volume from kg to lbs for consistency with health metrics
-        volume_kg = float(workout.total_volume_kg) if workout.total_volume_kg else 0
-        volume_lbs = volume_kg * KG_TO_LBS
+        #Format the results
+        formatted_workouts = []
+        for workout in workouts:
+            # Convert volume from kg to lbs for consistency with health metrics
+            volume_kg = float(workout.total_volume_kg) if workout.total_volume_kg else 0
+            volume_lbs = volume_kg * KG_TO_LBS
 
-        formatted_workouts.append({
-            "title": workout.title,
-            "date": workout.workout_date.isoformat(),
-            "duration_minutes": workout.duration_minutes,
-            "total_volume_lbs": round(volume_lbs, 1),
-            "exercise_count": workout.exercise_count,
-            "total_sets": workout.total_sets,
-            "source": workout.source,
-        })
-    return formatted_workouts
+            formatted_workouts.append({
+                "title": workout.title,
+                "date": workout.workout_date.isoformat(),
+                "duration_minutes": workout.duration_minutes,
+                "total_volume_lbs": round(volume_lbs, 1),
+                "exercise_count": workout.exercise_count,
+                "total_sets": workout.total_sets,
+                "source": workout.source,
+            })
+        return formatted_workouts
 
 
 @agent.tool
@@ -118,18 +120,20 @@ async def get_workout_analysis(
     """
     cutoff_date = datetime.now(UTC).date() - timedelta(days=days)
 
-    # Query workouts in the time period
-    stmt = (
-        select(WorkoutCache)
-        .where(
-            WorkoutCache.user_id == ctx.deps.user_id,
-            WorkoutCache.workout_date >= cutoff_date,
+    # Create own database session for parallel execution
+    async with ctx.deps.session_factory() as db:
+        # Query workouts in the time period
+        stmt = (
+            select(WorkoutCache)
+            .where(
+                WorkoutCache.user_id == ctx.deps.user_id,
+                WorkoutCache.workout_date >= cutoff_date,
+            )
+            .order_by(WorkoutCache.workout_date.asc())
         )
-        .order_by(WorkoutCache.workout_date.asc())
-    )
 
-    result = await ctx.deps.db.execute(stmt)
-    workouts = result.scalars().all()
+        result = await db.execute(stmt)
+        workouts = result.scalars().all()
 
     # Handle no data case
     if not workouts:
@@ -262,18 +266,20 @@ async def get_exercise_history(
     """
     cutoff_date = datetime.now(UTC).date() - timedelta(days=days)
 
-    # Query workouts that might contain this exercise
-    stmt = (
-        select(WorkoutCache)
-        .where(
-            WorkoutCache.user_id == ctx.deps.user_id,
-            WorkoutCache.workout_date >= cutoff_date,
+    # Create own database session for parallel execution
+    async with ctx.deps.session_factory() as db:
+        # Query workouts that might contain this exercise
+        stmt = (
+            select(WorkoutCache)
+            .where(
+                WorkoutCache.user_id == ctx.deps.user_id,
+                WorkoutCache.workout_date >= cutoff_date,
+            )
+            .order_by(WorkoutCache.workout_date.asc())
         )
-        .order_by(WorkoutCache.workout_date.asc())
-    )
 
-    result = await ctx.deps.db.execute(stmt)
-    workouts = result.scalars().all()
+        result = await db.execute(stmt)
+        workouts = result.scalars().all()
 
     if not workouts:
         return {

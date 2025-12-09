@@ -19,7 +19,7 @@ async def get_nutrition_stats(
     protein, carbs, and fats over the specified time period.
 
     Args:
-        ctx: The run context containing db session and user_id
+        ctx: The run context containing session_factory and user_id
         days: Number of days to analyze (default is 7)
 
     Returns:
@@ -30,27 +30,29 @@ async def get_nutrition_stats(
             "avg_protein_g": 150,
             "avg_carbs_g": 250,
             "avg_fats_g": 70
-            }    
+            }
     """
     cutoff_date = datetime.now(UTC).date() - timedelta(days=days)
 
-    stmt = select(
-        func.count(NutritionDaily.id).label("day_count"),
-        func.avg(NutritionDaily.calories).label("avg_calories"),
-        func.avg(NutritionDaily.protein_g).label("avg_protein_g"),
-        func.avg(NutritionDaily.carbs_g).label("avg_carbs_g"),
-        func.avg(NutritionDaily.fats_g).label("avg_fats_g"),
-    ).where(
-        NutritionDaily.user_id == ctx.deps.user_id,
-        NutritionDaily.log_date >= cutoff_date,
-    )
+    # Create own database session for parallel execution
+    async with ctx.deps.session_factory() as db:
+        stmt = select(
+            func.count(NutritionDaily.id).label("day_count"),
+            func.avg(NutritionDaily.calories).label("avg_calories"),
+            func.avg(NutritionDaily.protein_g).label("avg_protein_g"),
+            func.avg(NutritionDaily.carbs_g).label("avg_carbs_g"),
+            func.avg(NutritionDaily.fats_g).label("avg_fats_g"),
+        ).where(
+            NutritionDaily.user_id == ctx.deps.user_id,
+            NutritionDaily.log_date >= cutoff_date,
+        )
 
-    result = await ctx.deps.db.execute(stmt)
-    row = result.one()
-    return {
-        "days_analyzed": row.day_count,
-        "avg_calories": round(row.avg_calories, 1) if row.avg_calories else 0,
-        "avg_protein_g": round(row.avg_protein_g, 1) if row.avg_protein_g else 0,
-        "avg_carbs_g": round(row.avg_carbs_g, 1) if row.avg_carbs_g else 0,
-        "avg_fats_g": round(row.avg_fats_g, 1) if row.avg_fats_g else 0,
-    }
+        result = await db.execute(stmt)
+        row = result.one()
+        return {
+            "days_analyzed": row.day_count,
+            "avg_calories": round(row.avg_calories, 1) if row.avg_calories else 0,
+            "avg_protein_g": round(row.avg_protein_g, 1) if row.avg_protein_g else 0,
+            "avg_carbs_g": round(row.avg_carbs_g, 1) if row.avg_carbs_g else 0,
+            "avg_fats_g": round(row.avg_fats_g, 1) if row.avg_fats_g else 0,
+        }

@@ -37,17 +37,19 @@ async def get_health_metrics(
     else:
         metric_fields = metrics
 
-    stmt = (
-        select(HealthMetricsDaily)
-        .where(
-            HealthMetricsDaily.user_id == ctx.deps.user_id,
-            HealthMetricsDaily.metric_date >= cutoff_date,
+    # Create own database session for parallel execution
+    async with ctx.deps.session_factory() as db:
+        stmt = (
+            select(HealthMetricsDaily)
+            .where(
+                HealthMetricsDaily.user_id == ctx.deps.user_id,
+                HealthMetricsDaily.metric_date >= cutoff_date,
+            )
+            .order_by(HealthMetricsDaily.metric_date.desc())
         )
-        .order_by(HealthMetricsDaily.metric_date.desc())
-    )
 
-    result = await ctx.deps.db.execute(stmt)
-    rows = result.scalars().all()
+        result = await db.execute(stmt)
+        rows = result.scalars().all()
 
     if not rows:
         return {

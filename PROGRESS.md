@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-12-08 (Session 11 Complete)
+**Last Updated:** 2025-12-08 (Session 12 Complete)
 **Current Phase:** Phase 3 - In Progress (Pydantic AI Agent Expansion)
-**Status:** Agent now has 5 working tools! Can query nutrition, health metrics, workouts, and exercise progression. Database concurrency issue discovered during parallel tool testing (to fix in Session 12).
+**Status:** Database concurrency issue FIXED! Agent can now execute multiple tools in parallel. All 5 tools tested and working perfectly with complex multi-domain queries.
 
 ---
 
@@ -436,15 +436,37 @@ Workout_Optimizer/
 - **Key Learning:** Student built first tool (`get_health_metrics`) with step-by-step guidance
 - **Teaching Moment:** Flexible tool design > many specific tools (one `get_health_metrics()` vs separate `get_steps()`, `get_weight()`, etc.)
 
+### Session 12: Fix Database Concurrency & Enable Parallel Tools (Complete ✅)
+- **Goal:** Fix the database session concurrency issue discovered in Session 11
+- **Problem:** Agent calling multiple tools in parallel caused SQLAlchemy error: "concurrent operations are not permitted"
+- **Root Cause:** All tools shared a single database session passed via `AgentDependencies`
+- **Solution Implemented:**
+  - Changed `AgentDependencies` to pass `session_factory` instead of `db` session
+  - Updated all 5 tools to create their own database session using `async with ctx.deps.session_factory() as db:`
+  - Updated `/chat` endpoint to pass `AsyncSessionLocal` factory
+- **Files Modified:**
+  - `backend/agents/dependencies.py` - Changed from `db: AsyncSession` to `session_factory: async_sessionmaker[AsyncSession]`
+  - `backend/agents/tools/nutrition_tools.py` - Added session creation in `get_nutrition_stats()`
+  - `backend/agents/tools/workout_tools.py` - Added session creation in all 3 tools
+  - `backend/agents/tools/health_tools.py` - Added session creation in `get_health_metrics()`
+  - `backend/main.py` - Updated to pass `AsyncSessionLocal` factory instead of db session
+- **Testing Results:**
+  - ✅ Successfully tested multi-domain query: "I am not losing weight. Can you help me figure out why?"
+  - ✅ Agent queried nutrition (14 days), health metrics (30 days), and workouts (30 days) in parallel
+  - ✅ No concurrency errors in server logs
+  - ✅ Tested exercise progression query: "How is my squat progression looking?"
+  - ✅ Tested combined query: "Am I eating enough protein for my workout frequency?"
+- **Technical Learning:**
+  - SQLAlchemy async sessions are not thread-safe or concurrency-safe
+  - Each parallel operation needs its own session from the session factory
+  - Session factories (`async_sessionmaker`) are designed to create isolated sessions
+  - `async with` context manager ensures proper session cleanup
+- **Key Insight:** This fix enables the agent to efficiently query multiple data sources simultaneously, dramatically improving response time for complex queries
+- **Outcome:** All 5 tools now work perfectly in parallel - agent is ready for complex multi-domain analysis!
+
 ---
 
 ## 🚀 Upcoming Sessions (Phase 3 Roadmap)
-
-### Session 12: Fix Concurrency & Continue Testing
-- Fix database session concurrency issue (each tool needs own session)
-- Re-test multi-domain query ("Why am I not losing weight?")
-- Test complex analysis questions combining multiple data sources
-- Optional: Add MCP tools if needed for live Hevy queries
 
 ### Session 13: Streaming & UX
 - Implement streaming responses
@@ -459,8 +481,7 @@ Workout_Optimizer/
 
 ## 🐛 Known Issues / Tech Debt
 
-1. **Database Concurrency Issue** - Parallel tool calls fail because they share one DB session (Session 12 fix)
-2. **Legacy Code Present** - `backend/hevy/`, `backend/llm/` use old agents library (Session 10 cleanup)
+1. **Legacy Code Present** - `backend/llm/` uses old agents library (kept for reference, may port useful tools)
 2. **Test User Hardcoded** - Need proper authentication (Phase 4)
 3. **No Error Handling for Malformed Excel** - Parser assumes correct format
 4. **No File Size Limits** - Upload endpoint accepts any size file

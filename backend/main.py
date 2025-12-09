@@ -155,22 +155,27 @@ async def get_user_profile(user_id: str, db: AsyncSession = Depends(get_db)):
 # Note: /analyze endpoint removed - analysis is now handled through AI chat interface
 
 @app.post("/chat")
-async def chat(request: ChatRequest, db: AsyncSession = Depends(get_db)):
+async def chat(request: ChatRequest):
     """Chat endpoint with Pydantic AI agent and session management.
-    
+
     The agent has access to:
      - Nutrition data queries
      - Workout data queries
+     - Health metrics queries
+     - Exercise progression tracking
      - More to be added...
      """
     try:
         from backend.agents.agent import agent
         from backend.agents.dependencies import AgentDependencies
+        from backend.db.database import AsyncSessionLocal
 
         TEST_USER_ID = "2ae24e52-8440-4551-836b-7e2cd9ec45d5"
 
+        # Pass session factory instead of a single session
+        # This allows tools to create their own sessions for parallel execution
         deps = AgentDependencies(
-            db=db,
+            session_factory=AsyncSessionLocal,
             user_id=TEST_USER_ID
         )
 
