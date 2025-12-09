@@ -49,5 +49,5 @@ agent = Agent(
   """,
 )
 
-from backend.agents.tools import workout_tools, nutrition_tools
+from backend.agents.tools import workout_tools, nutrition_tools, health_tools
 
