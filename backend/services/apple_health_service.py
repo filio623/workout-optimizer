@@ -144,13 +144,12 @@ async def save_raw_metrics(
 
         stmt = insert(HealthMetricsRaw).values(batch)
 
-        # UPSERT: Update on conflict with unique constraint (user_id, metric_type, metric_date)
+        # UPSERT: Update on conflict with unique constraint (user_id, source, metric_date, metric_type)
         stmt = stmt.on_conflict_do_update(
-            index_elements=['user_id', 'metric_type', 'metric_date'],
+            index_elements=['user_id', 'source', 'metric_date', 'metric_type'],
             set_={
                 'value': stmt.excluded.value,
                 'unit': stmt.excluded.unit,
-                'source': stmt.excluded.source,
                 'source_metadata': stmt.excluded.source_metadata,
             }
         )

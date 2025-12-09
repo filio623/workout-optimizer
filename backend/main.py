@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from contextlib import asynccontextmanager
 from backend.config import config
 #from backend.llm.interface import run_agent_with_session
@@ -50,18 +50,17 @@ class ChatResponse(BaseModel):
     session_id: str
 
 class UserProfileCreate(BaseModel):
-    name: str = Field(..., example="John Doe")
+    name: str = Field(..., json_schema_extra={"example": "John Doe"})
     email: str
 
 class UserProfileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)  # Allows SQLAlchemy model to Pydantic model conversion
+
     id: str
     name: str
     email: str
     created_at: str
     updated_at: str
-
-    class Config:
-        from_attributes = True # Allows SQLAlchemy model to Pydantic model conversion
 
 # @app.post("/chat", response_model=ChatResponse)
 # async def chat(request: ChatRequest):
