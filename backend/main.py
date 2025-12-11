@@ -4,8 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 from contextlib import asynccontextmanager
 from backend.config import config
-#from backend.llm.interface import run_agent_with_session
-#from backend.services.workout_analyzer import WorkoutAnalyzer
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -15,8 +13,7 @@ from uuid import UUID
 from backend.routes import nutrition, apple_health, workouts
 import asyncio
 
-# Initialize analyzers
-#workout_analyzer = WorkoutAnalyzer()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,46 +61,7 @@ class UserProfileResponse(BaseModel):
     created_at: str
     updated_at: str
 
-# @app.post("/chat", response_model=ChatResponse)
-# async def chat(request: ChatRequest):
-#     """Chat endpoint with session management for conversation history."""
-#     try:
-#         response = await run_agent_with_session(request.message, request.session_id)
-#         return ChatResponse(response=response, session_id=request.session_id)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
 
-# @app.get("/api/workout-frequency")
-# def workout_frequency():
-#     try:
-#         data = workout_analyzer.get_weekly_workout_counts()
-#         return {'data': data}
-#     except ConnectionError:
-#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-# @app.get("/api/top-exercises")
-# def top_exercises():
-#     try:
-#         data = workout_analyzer.get_top_exercises()
-#         return {'data': data}
-#     except ConnectionError:
-#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-# @app.get("/api/top-muscle-groups")
-# def top_muscle_groups():
-#     try:
-#         data = workout_analyzer.get_top_muscle_groups()
-#         return {'data': data}
-#     except ConnectionError:
-#         raise HTTPException(status_code=503, detail="Unable to connect to workout data service")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-# Note: /workout-history endpoint removed - use /workouts/cached instead (MCP-based caching)
     
 @app.post("/user/profile", response_model=UserProfileResponse)
 async def create_user_profile(user_data: UserProfileCreate, db: AsyncSession = Depends(get_db)):
@@ -153,7 +111,7 @@ async def get_user_profile(user_id: str, db: AsyncSession = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving user profile: {str(e)}")
 
-# Note: /analyze endpoint removed - analysis is now handled through AI chat interface
+
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
