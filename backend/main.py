@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 from contextlib import asynccontextmanager
@@ -12,6 +13,7 @@ from backend.db.database import get_db
 from backend.db.models import User
 from uuid import UUID
 from backend.routes import nutrition, apple_health, workouts
+import asyncio
 
 # Initialize analyzers
 #workout_analyzer = WorkoutAnalyzer()
@@ -186,6 +188,46 @@ async def chat(request: ChatRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+    
+@app.post("/chat/stream")
+async def chat_stream(request: ChatRequest):
+    try:
+        from backend.agents.agent import agent
+        from backend.agents.dependencies import AgentDependencies
+        from backend.db.database import AsyncSessionLocal
+
+        TEST_USER_ID = "2ae24e52-8440-4551-836b-7e2cd9ec45d5"
+
+        deps = AgentDependencies(
+            session_factory=AsyncSessionLocal,
+            user_id=TEST_USER_ID,
+        )
+
+        async def generate():
+            try:
+                # Set 60 second timeout to prevent infinite hanging
+                async with asyncio.timeout(60):
+                    prev_text = ""
+                    async with agent.run_stream(request.message, deps=deps) as stream:
+                        async for chunk in stream.stream_text():
+                            new_text = chunk[len(prev_text):]
+                            yield new_text
+                            prev_text = chunk
+                    yield "\n"
+            except asyncio.TimeoutError:
+                yield "\n\n❌ Error: Request timed out after 60 seconds. Please try a simpler query.\n"
+            except ConnectionError as e:
+                yield f"\n\n❌ Error: Lost connection to AI service. {str(e)}\n"
+            except Exception as e:
+                yield f"\n\n❌ Error: {str(e)}\n"
+
+        return StreamingResponse(generate(), media_type="text/plain")
+
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+
+
 
 if __name__ == "__main__":
     import uvicorn
