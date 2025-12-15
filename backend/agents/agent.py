@@ -1,6 +1,7 @@
 from pydantic_ai import Agent, RunContext
 from backend.agents.dependencies import AgentDependencies
 from dotenv import load_dotenv
+from backend.config import settings
 
 """
 Main Pydantic AI agent for the Workout Optimizer.
@@ -16,15 +17,10 @@ Architecture: Single agent with parallel tool processing
 load_dotenv()  # Load environment variables from .env file
 
 agent = Agent(
-    'openai:gpt-5.1',
+    settings.AGENT_MODEL,
     deps_type=AgentDependencies,
     name="Workout Optimizer Agent",
     retries=3,
-    # tools=[
-    #     workout_tools.get_recent_workouts,
-    #     nutrition_tools.get_daily_nutrition,
-    #     nutrition_tools.get_health_metrics,
-    # ],
     system_prompt="""
   You are an expert fitness coach and data analyst. You help users optimize their 
   workouts, nutrition, and overall health by analyzing their personal data.

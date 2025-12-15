@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X, Activity, BarChart3, Calendar, User, Settings, Send, Mic } from 'lucide-react';
-import ChatArea from './ChatArea';
+import ChatInterface from './ChatInterface'; // Updated import
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { Theme, themes } from './ThemeSelector';
@@ -24,7 +24,7 @@ const Layout: React.FC = () => {
           setSidebarOpen={setSidebarOpen}
           currentTheme={currentTheme}
         />
-        <ChatArea currentTheme={currentTheme} />
+        <ChatInterface currentTheme={currentTheme} /> {/* Updated component usage */}
       </div>
     </div>
   );

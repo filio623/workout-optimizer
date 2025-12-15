@@ -464,41 +464,26 @@ Workout_Optimizer/
 - **Key Insight:** This fix enables the agent to efficiently query multiple data sources simultaneously, dramatically improving response time for complex queries
 - **Outcome:** All 5 tools now work perfectly in parallel - agent is ready for complex multi-domain analysis!
 
-### Session 13: Streaming Responses (Complete ✅)
-- **Goal:** Implement real-time streaming responses for better UX
+### Session 14: Frontend Integration & Polish (Complete ✅)
+- **Goal:** Connect the React frontend to the backend and enable streaming chat
 - **What We Built:**
-  - ✅ Created `/chat/stream` endpoint (new endpoint, non-breaking)
-  - ✅ Implemented `agent.run_stream()` with cumulative text streaming
-  - ✅ Added delta calculation to yield only new text chunks
-  - ✅ Integrated FastAPI `StreamingResponse` with async generators
-  - ✅ Added comprehensive error handling (timeout, connection errors, exceptions)
-  - ✅ Set 60-second timeout to prevent infinite hanging
-- **Technical Learning:**
-  - **Cumulative vs Delta streaming:** Pydantic AI streams cumulative text (full response so far), must calculate delta for terminal/UI display
-  - **Async generators:** `yield` creates a "recipe" that FastAPI executes, not immediate execution
-  - **Error handling in streams:** Can't change HTTP status after streaming starts, must yield error messages
-  - **asyncio.timeout():** Prevents LLM from hanging indefinitely
-- **Testing Results:**
-  - ✅ Simple query: "What was my protein last week?" - streams smoothly over ~3 seconds
-  - ✅ Complex query: "Analyze my nutrition and workouts for muscle gain" - streams 10,000+ char response over ~40 seconds
-  - ✅ Multi-tool query: Agent called 3 tools in parallel, streamed comprehensive analysis
-- **Files Modified:**
-  - `backend/main.py` - Added `/chat/stream` endpoint with error handling
-  - `backend/test_streaming.py` - Created test script for learning streaming concepts
-- **Key Achievements:**
-  - Users see text appear progressively (ChatGPT-style UX)
-  - Old `/chat` endpoint still works (backward compatible)
-  - Production-ready error handling for timeouts and failures
-- **Outcome:** Professional streaming UX implemented! Agent now delivers real-time responses with graceful error handling.
+  - ✅ **Frontend Setup:** Configured Vite proxy to handle CORS and `localhost` vs `127.0.0.1` networking issues
+  - ✅ **Chat Interface:** Created `ChatInterface.tsx` with a modern, responsive UI using Tailwind CSS
+  - ✅ **Streaming Integration:** Built `sendStreamingChatMessage` service to consume the backend's streaming endpoint
+  - ✅ **UX Polish:** Added typing indicators ("AI is thinking..."), message bubbles, and Markdown rendering
+  - ✅ **Persistence:** Implemented local storage to save chat history between page reloads
+  - ✅ **Error Handling:** Added user-friendly error messages for connection failures and timeouts
+- **Debugging Journey:**
+  - **Issue:** Frontend couldn't connect to backend ("Can't connect to server")
+  - **Root Cause:** Browser treated `localhost:5173` and `127.0.0.1:8005` as different origins (CORS), plus potential networking quirks
+  - **Solution:** Configured Vite proxy (`/api` -> `http://127.0.0.1:8005`) to route requests through the dev server, bypassing CORS
+  - **Verification:** Verified streaming works perfectly with real-time text generation
+- **Data Insight:** Verified that "missing recent workouts" was actually a correct reflection of reality (user was sick/inactive), proving the system works!
+- **Outcome:** Full-stack integration complete! We now have a working web app where users can chat with the AI agent in real-time.
 
 ---
 
 ## 🚀 Upcoming Sessions (Phase 3 Roadmap)
-
-### Session 14: Frontend Integration & Polish
-- Build simple frontend to test streaming visually
-- Add loading states and error UI
-- Implement message history display
 
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools
@@ -549,21 +534,27 @@ alembic downgrade -1
 **FastAPI:**
 ```bash
 # Start server
-python backend/main.py
+python -m backend.main
 
 # Upload nutrition file
 curl -X POST http://localhost:8005/nutrition/upload \
   -F "file=@sample_data/my_net_diary/MyNetDiary_Year_2024.xls"
 ```
 
+**Frontend:**
+```bash
+# Start frontend
+cd web && npm run dev
+```
+
 ---
 
 ## 📈 Progress Metrics
 
-**Total Sessions:** 13 (completed)
-**Total Time:** ~32-37 hours (including learning, design discussions, debugging)
-**Code Written:** ~1000 lines of production code
-**Tests Passed:** End-to-end pipeline working with real data from multiple sources
+**Total Sessions:** 14 (completed)
+**Total Time:** ~40 hours
+**Code Written:** ~1200 lines of production code
+**Tests Passed:** End-to-end full stack working (Frontend <-> Backend <-> DB <-> LLM)
 **Data Ingested:**
 - 279 days of nutrition data (3 years)
 - 740 days of health metrics
@@ -571,11 +562,11 @@ curl -X POST http://localhost:8005/nutrition/upload \
 - **475 workouts cached** (10 Hevy + 465 Apple Health)
 - **38,064 kg total volume** tracked
 
-**Files Created:** 23+ (models, parsers, services, routes, migrations, configs)
-**Dependencies Added:** 8 (FastAPI, SQLAlchemy, Alembic, pandas, xlrd, etc.)
+**Files Created:** 25+ (added ChatInterface, updated api.ts, vite.config.ts)
+**Dependencies Added:** React Markdown, Lucide Icons, Vite Proxy
 **Database Tables:** 7 (users, chat, nutrition, health metrics daily/raw, workouts)
 **Migrations Applied:** 5 (initial schema, nutrition updates, Apple Health constraints, workout constraints, bodyweight_reps)
 
 ---
 
-**Current Status:** 🟢 **Phase 3 Progressing!** Streaming AI chat implemented! Agent delivers real-time responses with professional UX. 5 tools working in parallel, ChatGPT-style streaming responses, comprehensive error handling with 60s timeout protection.
+**Current Status:** 🟢 **Full Stack Working!** We have a functioning React frontend connected to our Pydantic AI agent. Users can chat with the agent, which queries the database in real-time and streams responses back. Core "learning mode" infrastructure is complete.

@@ -1,41 +1,45 @@
 """
 Configuration management for the workout optimizer.
+Uses pydantic-settings for robust environment variable loading and validation.
 """
 
-import os
-from dotenv import load_dotenv
+from typing import Optional
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load environment variables from .env file if it exists
-load_dotenv()
+class Settings(BaseSettings):
+    # Core App Settings
+    APP_NAME: str = "Workout Optimizer"
+    APP_VERSION: str = "0.1.0"
+    DEBUG: bool = False
 
-class Config:
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    OPENAI_MODEL = "gpt-4o-mini"
-    HEVY_API_KEY = os.getenv("HEVY_API_KEY")
-    HEVY_BASE_URL = "https://api.hevyapp.com"
-    LOGFIRE_TOKEN = os.getenv("LOGFIRE_TOKEN")
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    # LLM Settings
+    AGENT_MODEL: str = "openai:gpt-4o-mini" # Default model
+    
+    # API Keys (Required)
+    OPENAI_API_KEY: str = Field(..., description="OpenAI API Key")
+    HEVY_API_KEY: str = Field(..., description="Hevy API Key")
+    
+    # API Keys (Optional)
+    ANTHROPIC_API_KEY: Optional[str] = Field(None, description="Anthropic API Key")
+    GOOGLE_API_KEY: Optional[str] = Field(None, description="Google Gemini API Key")
+    
+    # Observability
+    LOGFIRE_TOKEN: Optional[str] = Field(None, description="Logfire Token")
+    
+    # External Services
+    HEVY_BASE_URL: str = "https://api.hevyapp.com"
 
-    def __init__(self):
-        self.validate_api_keys()
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True, # We use UPPERCASE attributes
+        extra="ignore" # Ignore extra env vars
+    )
 
-    def validate_api_keys(self) -> None:
-        missing_keys = []
+# Create global settings instance
+# This replaces the old 'config' object
+settings = Settings()
 
-        if not self.OPENAI_API_KEY:
-            missing_keys.append("OPENAI_API_KEY")
-        if not self.HEVY_API_KEY:
-            missing_keys.append("HEVY_API_KEY")
-
-        if missing_keys:
-            raise ValueError(f"Missing required API keys: {', '.join(missing_keys)}")
-
-    def is_valid(self) -> bool:
-        try:
-            self.validate_api_keys()
-            return True
-        except ValueError as e:
-            print(f"Error: {e}")
-            return False
-
-config = Config()
+# Alias for backward compatibility if needed, but 'settings' is preferred
+config = settings
