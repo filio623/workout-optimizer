@@ -347,6 +347,13 @@ External Services:
 - ✅ **Extensibility**: Easy to add new MCPs (Strava, Whoop, etc.)
 - ✅ **Code reduction**: Delete custom Hevy client (~30% less code)
 
+**5. Why "Direct-Access" Agent Architecture?**
+- ✅ **Real-time consistency**: Agent reads "live" data from MCP (e.g., just-finished workout) to avoid stale cache.
+- ✅ **Write capabilities**: Agent can *act* (create routines) via MCP, not just analyze.
+- ✅ **Hybrid approach**: 
+  - **Live Data**: Uses MCP Tools directly (low latency, high freshness).
+  - **Deep Analysis**: Uses SQL Tools (high speed, aggregation power).
+
 ---
 
 ## Database Design
@@ -1374,82 +1381,68 @@ docker run -d \
   ghcr.io/chrisdoc/hevy-mcp:latest
 ```
 
-**MCP Client in FastAPI**:
+**MCP Client Utility**:
 
-File: `backend/mcp/client.py`
+File: `backend/mcp_client.py`
 
 ```python
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from typing import Dict, Any
+from backend.config import config
+from pathlib import Path
+import json
 
-class HevyMCPClient:
+async def call_hevy_tool(tool_name: str, arguments: dict = None) -> dict:
     """
-    Client for Hevy MCP server.
-    Provides typed methods for common operations.
+    Execute a tool on the Hevy MCP server.
+    Creates an ephemeral connection for each call to ensure reliability.
     """
+    # Path to your local MCP server implementation
+    server_script = Path(__file__).parent / "mcp_servers/hevy-mcp/dist/index.js"
+    
+    server_params = StdioServerParameters(
+        command="node",
+        args=[str(server_script)],
+        env={"HEVY_API_KEY": config.HEVY_API_KEY}
+    )
 
-    def __init__(self):
-        self.session: Optional[ClientSession] = None
-        self.tools: Dict[str, Any] = {}
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            
+            result = await session.call_tool(tool_name, arguments or {})
+            
+            if result.isError:
+                raise RuntimeError(f"MCP Tool Error: {result.content}")
+                
+            # Parse result content (usually JSON string inside text)
+            if not result.content:
+                return {}
+                
+            text_content = result.content[0].text
+            try:
+                return json.loads(text_content)
+            except json.JSONDecodeError:
+                return {"raw_text": text_content}
+```
 
-    async def connect(self):
-        """Connect to Hevy MCP server via Docker"""
-        server_params = StdioServerParameters(
-            command="docker",
-            args=["exec", "-i", "hevy-mcp", "node", "build/index.js"],
-            env=None
-        )
+**Agent Tools Wrapper**:
 
-        read, write = await stdio_client(server_params)
-        self.session = ClientSession(read, write)
-        await self.session.initialize()
+File: `backend/agents/tools/hevy_mcp_tools.py`
 
-        # List available tools
-        tools_list = await self.session.list_tools()
-        self.tools = {tool.name: tool for tool in tools_list.tools}
+```python
+from backend.mcp_client import call_hevy_tool
 
-    async def get_workouts(self, page: int = 1, page_size: int = 10):
-        """Get workouts from Hevy"""
-        result = await self.session.call_tool(
-            "mcp__hevy__get-workouts",
-            {"page": page, "pageSize": page_size}
-        )
-        return result.content
+async def get_recent_workouts_live(limit: int = 5):
+    """Get the most recent workouts directly from Hevy (real-time)"""
+    return await call_hevy_tool("get-workouts", {"pageSize": limit})
 
-    async def get_workout(self, workout_id: str):
-        """Get specific workout details"""
-        result = await self.session.call_tool(
-            "mcp__hevy__get-workout",
-            {"workoutId": workout_id}
-        )
-        return result.content
-
-    async def create_routine(self, title: str, exercises: List[dict]):
-        """Create new routine in Hevy"""
-        result = await self.session.call_tool(
-            "mcp__hevy__create-routine",
-            {
-                "title": title,
-                "exercises": exercises
-            }
-        )
-        return result.content
-
-    async def get_exercise_templates(self, page: int = 1, page_size: int = 100):
-        """Get available exercise templates"""
-        result = await self.session.call_tool(
-            "mcp__hevy__get-exercise-templates",
-            {"page": page, "pageSize": page_size}
-        )
-        return result.content
-
-# Initialize on app startup
-hevy_mcp_client = HevyMCPClient()
-
-@app.on_event("startup")
-async def startup():
-    await hevy_mcp_client.connect()
+async def create_routine(title: str, exercises: list):
+    """Create a new routine in Hevy"""
+    return await call_hevy_tool("create-routine", {
+        "title": title, 
+        "exercises": exercises
+    })
 ```
 
 ### LLM Context Management (Critical!)

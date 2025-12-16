@@ -464,7 +464,7 @@ Workout_Optimizer/
 - **Key Insight:** This fix enables the agent to efficiently query multiple data sources simultaneously, dramatically improving response time for complex queries
 - **Outcome:** All 5 tools now work perfectly in parallel - agent is ready for complex multi-domain analysis!
 
-### Session 14: Frontend Integration & Polish (Complete ✅)
+### Session 14: Frontend Integration & Sync Polish (Complete ✅)
 - **Goal:** Connect the React frontend to the backend and enable streaming chat
 - **What We Built:**
   - ✅ **Frontend Setup:** Configured Vite proxy to handle CORS and `localhost` vs `127.0.0.1` networking issues
@@ -473,17 +473,27 @@ Workout_Optimizer/
   - ✅ **UX Polish:** Added typing indicators ("AI is thinking..."), message bubbles, and Markdown rendering
   - ✅ **Persistence:** Implemented local storage to save chat history between page reloads
   - ✅ **Error Handling:** Added user-friendly error messages for connection failures and timeouts
+  - ✅ **Full Sync Feature:** Enhanced `sync_hevy_workouts` to support a `sync_all=True` flag that paginates through all Hevy history until completion.
 - **Debugging Journey:**
   - **Issue:** Frontend couldn't connect to backend ("Can't connect to server")
   - **Root Cause:** Browser treated `localhost:5173` and `127.0.0.1:8005` as different origins (CORS), plus potential networking quirks
   - **Solution:** Configured Vite proxy (`/api` -> `http://127.0.0.1:8005`) to route requests through the dev server, bypassing CORS
   - **Verification:** Verified streaming works perfectly with real-time text generation
-- **Data Insight:** Verified that "missing recent workouts" was actually a correct reflection of reality (user was sick/inactive), proving the system works!
+  - **Data Insight:** Verified that "missing recent workouts" was actually a correct reflection of reality (user was sick/inactive), proving the system works!
 - **Outcome:** Full-stack integration complete! We now have a working web app where users can chat with the AI agent in real-time.
 
 ---
 
 ## 🚀 Upcoming Sessions (Phase 3 Roadmap)
+
+### Session 15: Direct-Access Agent & Write Capabilities (Next Up)
+- **Goal:** Transform the agent from a passive "reader" to an active "operator" using direct MCP access.
+- **Why:** To ensure the agent always has real-time data (avoiding stale DB syncs) and can perform actions like creating routines.
+- **Plan:**
+  1.  **Refactor MCP Client:** Extract connection logic from `workout_service.py` into a reusable `backend/mcp_client.py`.
+  2.  **Create Live Tools:** Build `get_live_workouts` and `get_exercises` tools that query Hevy directly via MCP.
+  3.  **Enable Writes:** Implement `create_routine` tool for the agent to save programs.
+  4.  **Update Agent:** Prompt engineering to use "Live" tools for recent context and "DB" tools for long-term analysis.
 
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools

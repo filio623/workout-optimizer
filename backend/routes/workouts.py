@@ -18,6 +18,7 @@ TEST_USER_ID = "2ae24e52-8440-4551-836b-7e2cd9ec45d5"  # Use a fixed test user I
 @router.post("/sync")
 async def sync_workouts(
     page_size: int = Query(default=10, description="Number of workouts to fetch from Hevy (max 10)"),
+    sync_all: bool = Query(default=False, description="Sync all workout history (paginated)"),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -28,7 +29,8 @@ async def sync_workouts(
     - Existing workouts are updated with latest data
 
     Args:
-        page_size: Number of workouts to fetch (default 100)
+        page_size: Number of workouts to fetch per page (default 10)
+        sync_all: Whether to fetch all history or just the most recent page
 
     Returns:
         Summary of sync operation with count of workouts processed
@@ -38,6 +40,7 @@ async def sync_workouts(
             db=db,
             user_id=TEST_USER_ID,
             page_size=page_size,
+            sync_all=sync_all,
         )
         return {
             "success": True,
