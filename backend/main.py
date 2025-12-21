@@ -12,8 +12,11 @@ from backend.db.models import User
 from uuid import UUID
 from backend.routes import nutrition, apple_health, workouts, dashboard
 import asyncio
+import logfire
 
 
+# Configure Logfire
+logfire.configure(token=settings.LOGFIRE_TOKEN)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +25,9 @@ async def lifespan(app: FastAPI):
     print("App shutting down...")
 
 app = FastAPI(lifespan=lifespan)
+
+# Instrument FastAPI with Logfire
+logfire.instrument_fastapi(app)
 
 app.add_middleware(
     CORSMiddleware,

@@ -11,7 +11,7 @@ python-multipart
 email-validator
 pandas
 dateparser
-logfire
+logfire[fastapi]
 
 sqlalchemy[asyncio]==2.0.44
 alembic==1.17.1
