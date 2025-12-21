@@ -135,7 +135,21 @@ Users can now ingest data directly through the UI via the "Paperclip" button in 
 
 ---
 
-## 7. Directory Structure Guide
+## 9. Monitoring & Observability (Logfire)
+
+We use **Pydantic Logfire** for end-to-end observability. This provides a "waterfall" view of the entire request lifecycle, from the FastAPI endpoint down to individual LLM tool calls.
+
+### Integration
+*   **FastAPI Instrumentation:** Tracks HTTP requests, latency, and status codes.
+*   **Pydantic AI Instrumentation:** Traces agent execution, tool usage, and prompt/response flows.
+*   **OpenAI/Google GenAI Instrumentation:** Logs raw LLM calls, token usage, and costs.
+
+**Configuration:**
+Logfire is configured in `backend/main.py` using the `LOGFIRE_TOKEN` environment variable.
+
+---
+
+## 10. Directory Structure Guide
 
 ```
 /

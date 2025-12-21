@@ -496,15 +496,17 @@ Workout_Optimizer/
 - ✅ **Refined Strategy:** Updated system prompt to teach the agent when to use Live vs. Cached data.
 - **Key Learning:** Designing "Wrapper Tools" for translation (units), prompt engineering (context), and safety (validation) instead of just exposing raw API tools.
 
-### Session 16: MVP Stabilization & Analysis Tools (Complete ✅)
-- **Goal:** Fill the gaps to make the app a functional MVP with deep analysis and a working frontend.
+### Session 16: MVP Stabilization, Analysis Tools & Monitoring (Complete ✅)
+- **Goal:** Fill the gaps to make the app a functional MVP with deep analysis, a working frontend, and robust monitoring.
 - ✅ **Backend Analysis:** Implemented `detect_plateaus` (checks 90 days history) and `analyze_nutrition_vs_training` (correlates diet with volume).
 - ✅ **Dashboard API:** Created `/dashboard/stats` endpoint aggregating weekly progress, muscle splits, and heatmap data.
 - ✅ **Frontend Visualization:** Connected `ChartsSection.tsx` to real backend data (removed mock data).
 - ✅ **Frontend Input:** Enabled file uploads (Excel/JSON) via the Chat Interface paperclip button.
 - ✅ **Bug Fix:** Fixed Apple Health JSON upload routing in frontend `api.ts`.
-- ✅ **Documentation:** Created `TECHNICAL_GUIDE.md` for engineer onboarding.
-- **Outcome:** The app is now a functional "Loop": Input (Upload) -> Process (Agent/Analysis) -> Output (Chat/Dashboard).
+- ✅ **Dashboard Polish:** Fixed muscle group categorization (prioritizing Hevy data) and weekly progress chart visibility.
+- ✅ **Monitoring:** Integrated **Logfire** for comprehensive tracing of FastAPI, Pydantic, OpenAI, and Google GenAI.
+- ✅ **Documentation:** Created `TECHNICAL_GUIDE.md` and updated progress/architecture plans.
+- **Outcome:** The app is now a functional "Loop": Input (Upload) -> Process (Agent/Analysis) -> Output (Chat/Dashboard) -> Monitoring (Logfire).
 
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools
@@ -514,13 +516,14 @@ Workout_Optimizer/
 
 ## 🐛 Known Issues / Tech Debt
 
-1. **Legacy Code Present** - `backend/llm/` uses old agents library (kept for reference, may port useful tools)
-2. **Test User Hardcoded** - Need proper authentication (Phase 4)
-3. **No Error Handling for Malformed Excel** - Parser assumes correct format
-4. **No File Size Limits** - Upload endpoint accepts any size file
-5. **No Data Validation** - Trust parser output without validation
-6. **Timezone Handling** - Dates assume UTC, no timezone conversion
-7. **Chat History Persistence** - Still using SQLite/Local storage. Need to switch to Postgres `chat_sessions`.
+1. **Muscle Group Chart:** Currently showing "No workout data found" despite Hevy data being present. Template ID lookup (`exercise_templates_cache.json`) may still have an unresolved mapping issue.
+2. **Legacy Code Present** - `backend/llm/` uses old agents library (kept for reference, may port useful tools)
+3. **Test User Hardcoded** - Need proper authentication (Phase 4)
+4. **No Error Handling for Malformed Excel** - Parser assumes correct format
+5. **No File Size Limits** - Upload endpoint accepts any size file
+6. **No Data Validation** - Trust parser output without validation
+7. **Timezone Handling** - Dates assume UTC, no timezone conversion
+8. **Chat History Persistence** - Still using SQLite/Local storage. Need to switch to Postgres `chat_sessions`.
 
 ---
 
@@ -574,8 +577,8 @@ cd web && npm run dev
 ## 📈 Progress Metrics
 
 **Total Sessions:** 16 (completed)
-**Total Time:** ~45 hours
-**Code Written:** ~1600 lines of production code
+**Total Time:** ~48 hours
+**Code Written:** ~1800 lines of production code
 **Tests Passed:** End-to-end full stack working (Frontend <-> Backend <-> DB <-> LLM)
 **Data Ingested:**
 - 279 days of nutrition data (3 years)
@@ -584,16 +587,17 @@ cd web && npm run dev
 - **475 workouts cached** (10 Hevy + 465 Apple Health)
 - **38,064 kg total volume** tracked
 
-**Files Created:** 30+ (added Dashboard routes, Analysis tools, Technical Guide)
-**Dependencies Added:** React Markdown, Lucide Icons, Vite Proxy
+**Files Created:** 35+ (added Dashboard routes, Analysis tools, Technical Guide, Logfire config)
+**Dependencies Added:** React Markdown, Lucide Icons, Vite Proxy, Logfire
 **Database Tables:** 7 (users, chat, nutrition, health metrics daily/raw, workouts)
 **Migrations Applied:** 5 (initial schema, nutrition updates, Apple Health constraints, workout constraints, bodyweight_reps)
 
 ---
 
 **Current Status:** 🟢 **MVP Candidate Ready**
-We have a fully functional loop:
+We have a fully functional loop with monitoring:
 1.  **Input:** Users can upload data via UI.
 2.  **Processing:** Agent can analyze data (Plateaus, Correlations).
 3.  **Output:** Users see real-time Dashboards and get Chat coaching.
+4.  **Observability:** Logfire tracks all requests and LLM traces.
 **Next Up:** Phase 4 (Authentication & Multi-User Support) or rigorous Testing.
