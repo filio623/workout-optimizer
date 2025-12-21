@@ -7,12 +7,57 @@ Uses Model Context Protocol (MCP) for standardized Hevy integration.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from typing import Dict, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
 import json
 from backend.db.models import WorkoutCache
 from backend.mcp_client import call_hevy_tool
+
+
+def deduplicate_workouts(workouts: List[WorkoutCache]) -> List[WorkoutCache]:
+    """
+    Filter out Apple Health workouts that overlap with Hevy workouts.
+    
+    Strategy:
+    1. Keep all Hevy workouts (Source of Truth).
+    2. For each Apple Health workout, check if it starts within 30 minutes 
+       of any Hevy workout.
+    3. If it overlaps, assume it's a duplicate entry and discard it.
+    4. If it doesn't overlap (e.g. a separate morning walk), keep it.
+    """
+    if not workouts:
+        return []
+
+    # Separate by source
+    hevy_workouts = [w for w in workouts if w.source == 'hevy']
+    other_workouts = [w for w in workouts if w.source != 'hevy']
+    
+    # If no Hevy workouts, return everything (nothing to duplicate against)
+    if not hevy_workouts:
+        return workouts
+
+    # Create a list of Hevy start times for quick lookup
+    hevy_times = [w.workout_date for w in hevy_workouts]
+    
+    filtered_others = []
+    for other in other_workouts:
+        is_duplicate = False
+        for h_time in hevy_times:
+            # Check overlap window (30 minutes)
+            delta = abs((other.workout_date - h_time).total_seconds())
+            if delta < 1800:  # 30 minutes in seconds
+                is_duplicate = True
+                break
+        
+        if not is_duplicate:
+            filtered_others.append(other)
+            
+    # Combine and sort by date descending
+    combined = hevy_workouts + filtered_others
+    combined.sort(key=lambda x: x.workout_date, reverse=True)
+    
+    return combined
 
 
 def _calculate_workout_metrics(workout: dict) -> dict:

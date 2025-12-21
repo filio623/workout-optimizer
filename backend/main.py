@@ -29,6 +29,22 @@ app = FastAPI(lifespan=lifespan)
 # Instrument FastAPI with Logfire
 logfire.instrument_fastapi(app)
 
+# Instrument Pydantic (for validation tracing)
+if hasattr(logfire, "instrument_pydantic"):
+    logfire.instrument_pydantic()
+
+# Instrument Pydantic AI (for agent tracing)
+if hasattr(logfire, "instrument_pydantic_ai"):
+    logfire.instrument_pydantic_ai()
+
+# Instrument OpenAI (for LLM call tracing - prompts, tokens, etc.)
+if hasattr(logfire, "instrument_openai"):
+    logfire.instrument_openai()
+
+# Instrument Google GenAI (if using Gemini)
+if hasattr(logfire, "instrument_google_genai"):
+    logfire.instrument_google_genai()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:8000", "http://127.0.0.1:8000", "http://127.0.0.1:5173"],

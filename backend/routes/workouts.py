@@ -56,25 +56,29 @@ async def sync_workouts(
 
 @router.get("/cached")
 async def get_cached_workouts(
-    limit: int = Query(default=10, description="Number of workouts to return"),
+    limit: int = Query(default=3, description="Number of workouts to return"),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Retrieve cached workouts from the database.
 
-    Returns workouts ordered by date (most recent first).
+    Returns ONLY Hevy workouts, ordered by date (most recent first).
+    Apple Health workouts are excluded from this list to prevent duplicates.
 
     Args:
-        limit: Number of workouts to return (default 10)
+        limit: Number of workouts to return (default 3)
 
     Returns:
         List of cached workout summaries
     """
     try:
-        # Query cached workouts
+        # Query cached workouts - STRICTLY HEVY
         stmt = (
             select(WorkoutCache)
-            .where(WorkoutCache.user_id == TEST_USER_ID)
+            .where(
+                WorkoutCache.user_id == TEST_USER_ID,
+                WorkoutCache.source == 'hevy' # Only show Hevy workouts
+            )
             .order_by(WorkoutCache.workout_date.desc())
             .limit(limit)
         )

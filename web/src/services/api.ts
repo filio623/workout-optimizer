@@ -4,8 +4,9 @@ export interface Workout {
     id: string;
     title: string;
     date: string;
-    duration: string;
-    sets: number;
+    duration_minutes: number;
+    total_sets: number;
+    source: string;
 }
 
 export const sendStreamingChatMessage = async (message: string, sessionId: string = 'default_user') => {
@@ -39,9 +40,20 @@ export const sendStreamingChatMessage = async (message: string, sessionId: strin
     }
 };
 
+export const syncWorkouts = async (): Promise<void> => {
+    try {
+        await fetch(`${API_BASE_URL}/workouts/sync`, {
+            method: 'POST',
+        });
+    } catch (error) {
+        console.error('Background sync failed:', error);
+        // Don't throw, just log. We don't want to break the UI if sync fails.
+    }
+};
+
 export const getRecentWorkouts = async (): Promise<Workout[]> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/workout-history`, {
+        const response = await fetch(`${API_BASE_URL}/workouts/cached?limit=3`, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
@@ -54,7 +66,7 @@ export const getRecentWorkouts = async (): Promise<Workout[]> => {
         }
 
         const data = await response.json();
-        return data;
+        return data.workouts; // Backend returns { workouts: [...] }
 
     } catch (error) {
         console.error('Error fetching recent workouts:', error);
@@ -68,6 +80,12 @@ export interface DashboardStats {
     muscleGroups: { name: string; percentage: number; color: string }[];
     performance: { volumeTrend: number; consistency: string };
     heatmap: number[];
+    quickStats: {
+        weeklyGoals: string;
+        streak: string;
+        avgDuration: string;
+        progress: string;
+    };
 }
 
 export const fetchDashboardStats = async (): Promise<DashboardStats> => {

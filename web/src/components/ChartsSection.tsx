@@ -44,15 +44,19 @@ const ChartsSection: React.FC = () => {
           <h4 className="font-medium text-slate-900">Weekly Progress</h4>
           <TrendingUp className="w-4 h-4 text-green-500" />
         </div>
-        <div className="flex items-end justify-between h-20 gap-1">
+        <div className="flex items-end justify-between h-24 gap-2">
           {stats.weeklyProgress.map((day, index) => (
-            <div key={index} className="flex flex-col items-center flex-1">
+            <div key={index} className="flex flex-col items-center flex-1 h-full justify-end">
               <div 
-                className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-sm transition-all duration-300 hover:from-blue-600 hover:to-blue-500"
-                style={{ height: `${Math.max(day.value, 5)}%` }} // Ensure at least tiny bar visible
-                title={`${day.raw_date}: ${Math.round(day.value)}% intensity`}
-              ></div>
-              <span className="text-xs text-slate-500 mt-1">{day.day}</span>
+                className="w-full bg-blue-500 rounded-t-md hover:bg-blue-600 transition-all duration-300 relative group"
+                style={{ height: `${Math.max(day.value, 5)}%` }}
+              >
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-10">
+                  {Math.round(day.value)}% Intensity
+                </div>
+              </div>
+              <span className="text-xs text-slate-500 mt-2 font-medium">{day.day}</span>
             </div>
           ))}
         </div>
@@ -61,7 +65,7 @@ const ChartsSection: React.FC = () => {
       {/* Muscle Group Progress */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-100">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-medium text-slate-900">Top Muscle Groups (30d)</h4>
+          <h4 className="font-medium text-slate-900">Top Muscle Groups (90d)</h4>
           <Target className="w-4 h-4 text-purple-500" />
         </div>
         <div className="space-y-3">

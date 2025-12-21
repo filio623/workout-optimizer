@@ -1937,43 +1937,51 @@ npx expo start
 
 ---
 
-### Phase 6: Deployment & Production (Week 7)
+### Phase 6: Self-Hosting & Deployment (Synology NAS)
 
-**Learning Focus**: Docker, CI/CD, Deployment platforms
+**Strategy**: "Sovereign Cloud" - Self-host on personal Synology DS1522+ for privacy, zero cost, and full control.
+
+**Infrastructure**:
+- **Hardware**: Synology DS1522+ (Ryzen, Container Manager)
+- **Networking**: Tailscale Mesh Network (Secure remote access without port forwarding)
+- **Orchestration**: Docker Compose
 
 **Tasks**:
-1. ✅ Create Docker Compose setup
-2. ✅ Deploy backend to Railway/Render
-3. ✅ Deploy PostgreSQL to Railway
-4. ✅ Deploy web frontend to Vercel
-5. ✅ Build iOS app with EAS
-6. ✅ Build Android app with EAS
-7. ✅ Set up environment variables
-8. ✅ Configure production database
-9. ✅ Test end-to-end
+1. ✅ **Containerization**:
+   - Create multi-stage `Dockerfile` for Backend (Python + Node.js for MCP)
+   - Create multi-stage `Dockerfile` for Frontend (Node.js Build → Nginx Serve)
+2. ⏳ **Orchestration**:
+   - Create `docker-compose.prod.yml` specifically for Synology architecture
+   - Configure persistent volumes for PostgreSQL to map to NAS shared folders
+3. ⏳ **Deployment**:
+   - Transfer project to NAS (Git pull or SCP)
+   - Launch stack via Synology Container Manager
+4. ⏳ **Security & Access**:
+   - Install Tailscale on Synology
+   - Install Tailscale on iPhone
+   - Verify secure access via private IP (e.g., `http://100.x.y.z`)
 
 **Success Criteria**:
-- Backend accessible at public URL
-- Database persistent and backed up
-- Web app accessible online
-- iOS app installable via TestFlight
-- Android app installable (internal testing)
+- App accessible from iPhone via Tailscale VPN
+- Database persists across container restarts
+- No monthly cloud bills
 
-**Deployment Commands**:
-```bash
-# Build Docker image
-docker build -t workout-optimizer-backend .
+---
 
-# Deploy to Railway
-railway up
+### Phase 7: Mobile App (React Native / Expo)
 
-# Build mobile apps
-eas build --platform ios
-eas build --platform android
+**Vision**: A native iOS companion that reuses the existing backend.
 
-# Deploy web
-vercel deploy
-```
+**Strategy**:
+- **Framework**: Expo (React Native)
+- **Code Sharing**: Reuse `services/api.ts` and React hooks from the web project.
+- **Native Integration**: Use Expo HealthKit to auto-sync Apple Health data (replacing the manual JSON export).
+
+**Roadmap**:
+1. Initialize `apps/mobile` with Expo.
+2. Port Chat Interface using `<View>`/`<Text>` instead of `<div>`.
+3. Implement `expo-healthkit` background sync.
+4. Build `.ipa` and install via TestFlight or local development build.
 
 ---
 

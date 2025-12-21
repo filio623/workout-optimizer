@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, BarChart3, Calendar, Trophy, Target, TrendingUp, Clock, Dumbbell } from 'lucide-react';
 import ChartsSection from './ChartsSection';
 import { Theme } from './ThemeSelector';
-import { getRecentWorkouts, Workout } from '../services/api';
+import { getRecentWorkouts, fetchDashboardStats, syncWorkouts, Workout, DashboardStats } from '../services/api';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -13,17 +13,44 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentTheme }) => {
 
   const [workoutHistory, setWorkoutHistory] = useState<Workout[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    
+    // Fetch workouts
+    try {
+      const workouts = await getRecentWorkouts();
+      setWorkoutHistory(workouts || []);
+    } catch (error) {
+      console.error('Error fetching workouts:', error);
+      if (!isRefresh) setWorkoutHistory([]);
+    }
+
+    // Fetch stats
+    try {
+      const stats = await fetchDashboardStats();
+      setDashboardData(stats);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+    
+    if (!isRefresh) setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchWorkoutHistory = async () => {
-      try {
-        const workouts = await getRecentWorkouts();
-        setWorkoutHistory(workouts);
-      } catch (error) {
-        console.error('Error fetching workouts:', error);
-      }
+    // 1. Initial load from cache (fast)
+    loadData();
+
+    // 2. Background sync (slower) -> then reload
+    const performSync = async () => {
+      await syncWorkouts();
+      // Reload data after sync to show latest
+      loadData(true); 
     };
 
-    fetchWorkoutHistory();
+    performSync();
   }, []);
 
   const getRelativeTime = (dateString: string): string => {
@@ -44,10 +71,30 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
 
 
   const stats = [
-    { label: 'Weekly Goals', value: '4/5', icon: Target, color: 'text-blue-600' },
-    { label: 'Streak', value: '7 days', icon: Trophy, color: 'text-yellow-600' },
-    { label: 'Avg Duration', value: '42 min', icon: Clock, color: 'text-green-600' },
-    { label: 'Progress', value: '+12%', icon: TrendingUp, color: 'text-purple-600' },
+    { 
+      label: 'Weekly Goals', 
+      value: dashboardData?.quickStats.weeklyGoals || '0/5', 
+      icon: Target, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Streak', 
+      value: dashboardData?.quickStats.streak || '0 active days', 
+      icon: Trophy, 
+      color: 'text-yellow-600' 
+    },
+    { 
+      label: 'Avg Duration', 
+      value: dashboardData?.quickStats.avgDuration || '0 min', 
+      icon: Clock, 
+      color: 'text-green-600' 
+    },
+    { 
+      label: 'Progress', 
+      value: dashboardData?.quickStats.progress || '0%', 
+      icon: TrendingUp, 
+      color: 'text-purple-600' 
+    },
   ];
 
   return (
@@ -102,8 +149,10 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
           <div className="mb-6">
             <h3 className="text-sm font-medium text-slate-700 uppercase tracking-wider mb-4">Recent Workouts</h3>
             <div className="space-y-3">
-              {workoutHistory.length === 0 ? (
-                <div className="text-slate-500 text-sm">Loading workouts...</div>
+              {loading ? (
+                <div className="text-slate-500 text-sm animate-pulse">Loading workouts...</div>
+              ) : workoutHistory.length === 0 ? (
+                <div className="text-slate-500 text-sm italic">No recent workouts found.</div>
               ) : (
                 workoutHistory.map((workout) => (
                   <div
@@ -113,21 +162,21 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 bg-gradient-to-r ${currentTheme.primary} rounded-full`}></div>
-                        <h4 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
-                          {workout.title}
+                        <h4 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {workout.title || 'Untitled Workout'}
                         </h4>
                       </div>
-                      <span className="text-xs text-slate-500">{getRelativeTime(workout.date)}</span>
+                      <span className="text-xs text-slate-500 whitespace-nowrap">{getRelativeTime(workout.date)}</span>
                     </div>
 
                     <div className="flex items-center gap-4 text-sm text-slate-600">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        <span>{workout.duration}</span>
+                        <span>{workout.duration_minutes || 0} min</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Dumbbell className="w-3 h-3" />
-                        <span>Total sets {workout.sets}</span>
+                        <span>{workout.total_sets || 0} sets</span>
                       </div>
                     </div>
                   </div>
