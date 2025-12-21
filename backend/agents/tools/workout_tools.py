@@ -180,7 +180,6 @@ async def search_exercises(
     
     return matches[:10]
 
-
 @agent.tool
 async def create_routine(
     ctx: RunContext[AgentDependencies],
