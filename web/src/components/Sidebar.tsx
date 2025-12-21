@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
         transition-transform duration-300 ease-in-out
         w-80 h-full ${currentTheme.surface} backdrop-blur-md border-r border-slate-200
       `}>
-        <div className="p-6 h-full flex flex-col">
+        <div className="p-6 h-full flex flex-col overflow-y-auto custom-scrollbar">
           {/* Close button for mobile */}
           <div className="flex items-center justify-between mb-6 lg:hidden">
             <h2 className="text-lg font-semibold text-slate-900">Workout Data</h2>
@@ -101,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
           {/* Recent Workouts */}
           <div className="mb-6">
             <h3 className="text-sm font-medium text-slate-700 uppercase tracking-wider mb-4">Recent Workouts</h3>
-            <div className="space-y-3 max-h-64 overflow-y-auto">
+            <div className="space-y-3">
               {workoutHistory.length === 0 ? (
                 <div className="text-slate-500 text-sm">Loading workouts...</div>
               ) : (
@@ -142,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, currentT
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3 pb-6">
             <button className={`w-full bg-gradient-to-r ${currentTheme.primary} text-white rounded-xl py-3 px-4 font-medium hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2`}>
               <BarChart3 className="w-4 h-4" />
               View Full Analytics

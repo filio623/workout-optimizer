@@ -3,7 +3,7 @@ import { Send, Mic, Paperclip, MoreVertical } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { Theme } from './ThemeSelector';
-import { sendStreamingChatMessage } from '../services/api';
+import { sendStreamingChatMessage, uploadFile } from '../services/api';
 
 interface Message {
   id: string; // Changed to string for consistency with Date.now().toString()
@@ -19,6 +19,7 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
   const STORAGE_KEY = 'workout-optimizer-messages';
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const saveMessagesToStorage = (messages: Message[]) => {
     try {
@@ -155,6 +156,52 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
     }
   };
 
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Add a user message indicating file upload
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: `Uploading file: ${file.name}...`,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsStreaming(true);
+
+    try {
+      const response = await uploadFile(file);
+      
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `✅ Successfully uploaded **${file.name}**.\n\nParsed ${response.new_records || response.records_synced || 'some'} new records. I can now analyze this data for you.`, 
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: `❌ Failed to upload file: ${getErrorMessage(error)}`,
+        sender: 'error',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsStreaming(false);
+      // Reset input so same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSend();
@@ -211,7 +258,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
       {/* Input Area */}
       <div className={`${currentTheme.surface} backdrop-blur-md border-t border-slate-200 px-6 py-4`}>
         <div className="flex items-center gap-3">
-          <button className="p-3 rounded-xl hover:bg-slate-100 transition-colors">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+            accept=".csv,.xls,.xlsx,.xml,application/json" 
+          />
+          <button 
+            onClick={handleFileClick}
+            className="p-3 rounded-xl hover:bg-slate-100 transition-colors"
+            title="Upload Nutrition (Excel) or Health (JSON/XML) file"
+          >
             <Paperclip className="w-5 h-5 text-slate-600" />
           </button>
 

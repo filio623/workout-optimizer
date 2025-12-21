@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-12-10 (Session 13 Complete)
-**Current Phase:** Phase 3 - In Progress (Pydantic AI Agent Expansion)
-**Status:** Streaming responses implemented! Real-time text generation working with 60s timeout and comprehensive error handling. Agent delivers professional UX with progressive response display.
+**Last Updated:** 2025-12-20 (Session 16 In Progress)
+**Current Phase:** Phase 3 - In Progress (Analysis Tools & MVP Stabilization)
+**Status:** Direct-Access Agent implemented! The agent can now query live data directly from Hevy and create new workout routines.
 
 ---
 
@@ -486,14 +486,25 @@ Workout_Optimizer/
 
 ## 🚀 Upcoming Sessions (Phase 3 Roadmap)
 
-### Session 15: Direct-Access Agent & Write Capabilities (Next Up)
+### Session 15: Direct-Access Agent & Write Capabilities (Complete ✅)
 - **Goal:** Transform the agent from a passive "reader" to an active "operator" using direct MCP access.
-- **Why:** To ensure the agent always has real-time data (avoiding stale DB syncs) and can perform actions like creating routines.
-- **Plan:**
-  1.  **Refactor MCP Client:** Extract connection logic from `workout_service.py` into a reusable `backend/mcp_client.py`.
-  2.  **Create Live Tools:** Build `get_live_workouts` and `get_exercises` tools that query Hevy directly via MCP.
-  3.  **Enable Writes:** Implement `create_routine` tool for the agent to save programs.
-  4.  **Update Agent:** Prompt engineering to use "Live" tools for recent context and "DB" tools for long-term analysis.
+- ✅ **Refactored MCP Client:** Created `backend/mcp_client.py` for reusable, safe MCP communication.
+- ✅ **Built Live Tools:** Added `get_live_workouts` and `get_live_routines` for real-time context.
+- ✅ **Improved Search:** Added paginated `search_exercises` tool to find any exercise in Hevy's 500+ template database.
+- ✅ **Enabled Writes:** Implemented `create_routine` tool for the agent to save workout programs.
+- ✅ **Unit Management:** Implemented automatic LBS -> KG conversion for Hevy API compatibility.
+- ✅ **Refined Strategy:** Updated system prompt to teach the agent when to use Live vs. Cached data.
+- **Key Learning:** Designing "Wrapper Tools" for translation (units), prompt engineering (context), and safety (validation) instead of just exposing raw API tools.
+
+### Session 16: MVP Stabilization & Analysis Tools (Complete ✅)
+- **Goal:** Fill the gaps to make the app a functional MVP with deep analysis and a working frontend.
+- ✅ **Backend Analysis:** Implemented `detect_plateaus` (checks 90 days history) and `analyze_nutrition_vs_training` (correlates diet with volume).
+- ✅ **Dashboard API:** Created `/dashboard/stats` endpoint aggregating weekly progress, muscle splits, and heatmap data.
+- ✅ **Frontend Visualization:** Connected `ChartsSection.tsx` to real backend data (removed mock data).
+- ✅ **Frontend Input:** Enabled file uploads (Excel/JSON) via the Chat Interface paperclip button.
+- ✅ **Bug Fix:** Fixed Apple Health JSON upload routing in frontend `api.ts`.
+- ✅ **Documentation:** Created `TECHNICAL_GUIDE.md` for engineer onboarding.
+- **Outcome:** The app is now a functional "Loop": Input (Upload) -> Process (Agent/Analysis) -> Output (Chat/Dashboard).
 
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools
@@ -509,6 +520,7 @@ Workout_Optimizer/
 4. **No File Size Limits** - Upload endpoint accepts any size file
 5. **No Data Validation** - Trust parser output without validation
 6. **Timezone Handling** - Dates assume UTC, no timezone conversion
+7. **Chat History Persistence** - Still using SQLite/Local storage. Need to switch to Postgres `chat_sessions`.
 
 ---
 
@@ -561,9 +573,9 @@ cd web && npm run dev
 
 ## 📈 Progress Metrics
 
-**Total Sessions:** 14 (completed)
-**Total Time:** ~40 hours
-**Code Written:** ~1200 lines of production code
+**Total Sessions:** 16 (completed)
+**Total Time:** ~45 hours
+**Code Written:** ~1600 lines of production code
 **Tests Passed:** End-to-end full stack working (Frontend <-> Backend <-> DB <-> LLM)
 **Data Ingested:**
 - 279 days of nutrition data (3 years)
@@ -572,11 +584,16 @@ cd web && npm run dev
 - **475 workouts cached** (10 Hevy + 465 Apple Health)
 - **38,064 kg total volume** tracked
 
-**Files Created:** 25+ (added ChatInterface, updated api.ts, vite.config.ts)
+**Files Created:** 30+ (added Dashboard routes, Analysis tools, Technical Guide)
 **Dependencies Added:** React Markdown, Lucide Icons, Vite Proxy
 **Database Tables:** 7 (users, chat, nutrition, health metrics daily/raw, workouts)
 **Migrations Applied:** 5 (initial schema, nutrition updates, Apple Health constraints, workout constraints, bodyweight_reps)
 
 ---
 
-**Current Status:** 🟢 **Full Stack Working!** We have a functioning React frontend connected to our Pydantic AI agent. Users can chat with the agent, which queries the database in real-time and streams responses back. Core "learning mode" infrastructure is complete.
+**Current Status:** 🟢 **MVP Candidate Ready**
+We have a fully functional loop:
+1.  **Input:** Users can upload data via UI.
+2.  **Processing:** Agent can analyze data (Plateaus, Correlations).
+3.  **Output:** Users see real-time Dashboards and get Chat coaching.
+**Next Up:** Phase 4 (Authentication & Multi-User Support) or rigorous Testing.

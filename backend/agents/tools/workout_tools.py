@@ -1,7 +1,8 @@
 """
 Workout tools for the Pydantic AI agent.
 
-These tools allow the agent to query and analyze workout data from the cache.
+These tools allow the agent to query and analyze workout data from the cache
+as well as live data directly from Hevy via MCP.
 """
 
 from pydantic_ai import RunContext
@@ -9,11 +10,23 @@ from backend.agents.dependencies import AgentDependencies
 from backend.agents.agent import agent
 from sqlalchemy import select, func
 from backend.db.models import WorkoutCache
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta, UTC
+from backend.mcp_client import call_hevy_tool
 
 # Conversion constant
 KG_TO_LBS = 2.20462
+
+def _convert_workout_to_lbs(workout: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to convert a detailed Hevy workout/routine from kg to lbs."""
+    if not workout or 'exercises' not in workout:
+        return workout
+        
+    for exercise in workout.get('exercises', []):
+        for set_data in exercise.get('sets', []):
+            if set_data.get('weight_kg') is not None:
+                set_data['weight_lbs'] = round(set_data['weight_kg'] * KG_TO_LBS, 1)
+    return workout
 
 @agent.tool
 async def get_recent_workouts(
@@ -21,11 +34,11 @@ async def get_recent_workouts(
     limit: int = 10,
 ) -> List[Dict]:
     """
-    Get the user's most recent workouts from the cache.
+    Get the user's recent workouts from the local cache.
 
-    This tool queries the workout_cache table which contains workouts from
-    both Hevy (via MCP) and Apple Health. Returns workout summaries with
-    date, duration, volume, and exercise count.
+    This tool queries the database which contains synced workouts from
+    both Hevy and Apple Health. Returns workout summaries.
+    For the absolute latest workout (just finished), use get_live_workouts instead.
 
     Args:
         ctx: The run context containing session_factory and user_id
@@ -33,14 +46,6 @@ async def get_recent_workouts(
 
     Returns:
         List of workout dictionaries, ordered by date (newest first)
-        Example: [{
-            "title": "Upper Body Day",
-            "date": "2025-12-07",
-            "duration_minutes": 65,
-            "total_volume_lbs": 4250.5,
-            "exercise_count": 6,
-            "total_sets": 24
-        }, ...]
     """
 
     # Create own database session for parallel execution
@@ -71,8 +76,153 @@ async def get_recent_workouts(
                 "exercise_count": workout.exercise_count,
                 "total_sets": workout.total_sets,
                 "source": workout.source,
+                "workout_id": workout.source_workout_id
             })
         return formatted_workouts
+
+
+@agent.tool
+async def get_live_workouts(
+    ctx: RunContext[AgentDependencies],
+    limit: int = 5,
+) -> List[Dict]:
+    """
+    Get the absolute latest workouts directly from Hevy (real-time).
+
+    Use this tool when the user asks about a workout they just finished,
+    or when you need the most up-to-date data that might not be in the cache yet.
+    Returns full workout details including exercises and sets.
+
+    Args:
+        ctx: The run context (contains user_id)
+        limit: Number of recent workouts to fetch (default: 5, max: 10)
+
+    Returns:
+        List of detailed workout dictionaries from Hevy.
+    """
+    # Hevy MCP max pageSize is 10
+    safe_limit = min(limit, 10)
+    
+    workouts = await call_hevy_tool("get-workouts", {"pageSize": safe_limit})
+    
+    # Hevy MCP returns a list directly or wrapped
+    workout_list = workouts if isinstance(workouts, list) else workouts.get('workouts', [])
+    
+    # Convert units and return
+    return [_convert_workout_to_lbs(w) for w in workout_list]
+
+
+@agent.tool
+async def get_live_routines(
+    ctx: RunContext[AgentDependencies],
+) -> List[Dict]:
+    """
+    Get the user's saved workout routines directly from Hevy.
+
+    Use this to see what routines the user already has saved in Hevy.
+    Useful for understanding their current program or before creating a new routine.
+
+    Args:
+        ctx: The run context
+
+    Returns:
+        List of routine dictionaries.
+    """
+    routines = await call_hevy_tool("get-routines")
+    
+    routine_list = routines if isinstance(routines, list) else routines.get('routines', [])
+    
+    return [_convert_workout_to_lbs(r) for r in routine_list]
+
+
+@agent.tool
+async def search_exercises(
+    ctx: RunContext[AgentDependencies],
+    query: str,
+) -> List[Dict]:
+    """
+    Search for exercise templates in Hevy.
+
+    Use this tool when you need to find the correct exercise ID or name
+    before recommending an exercise or creating a routine.
+
+    Args:
+        ctx: The run context
+        query: Search term (e.g., "bench press", "squat")
+
+    Returns:
+        List of matching exercise templates.
+    """
+    query_lower = query.lower()
+    matches = []
+    page = 1
+    max_pages = 5  # Limit to 5 pages (500 exercises) to keep it fast
+    
+    while page <= max_pages:
+        exercises = await call_hevy_tool("get-exercise-templates", {"page": page, "pageSize": 100})
+        exercise_list = exercises if isinstance(exercises, list) else exercises.get('exercise_templates', [])
+        
+        if not exercise_list:
+            break
+            
+        # Filter by query
+        page_matches = [
+            e for e in exercise_list 
+            if query_lower in e.get('title', '').lower()
+        ]
+        matches.extend(page_matches)
+        
+        # If we have enough matches or reached end of list
+        if len(matches) >= 10 or len(exercise_list) < 100:
+            break
+            
+        page += 1
+    
+    return matches[:10]
+
+
+@agent.tool
+async def create_routine(
+    ctx: RunContext[AgentDependencies],
+    title: str,
+    exercises: List[Dict[str, Any]],
+) -> Dict:
+    """
+    Create a new workout routine in the user's Hevy account.
+
+    Use this tool when the user asks you to create a workout plan, program, or specific routine.
+    The routine will be saved to their Hevy app so they can use it during their next workout.
+
+    IMPORTANT: Hevy API requires weight in KILOGRAMS (kg). 
+    If you have weight in lbs, divide by 2.20462 before calling this tool.
+
+    Args:
+        ctx: The run context
+        title: Title of the routine (e.g., "Push Day A", "Upper Body Hypertrophy")
+        exercises: List of exercise objects. Each object MUST have:
+            - exerciseTemplateId: UUID of the exercise template (use search_exercises to find these)
+            - sets: List of set objects, each with:
+                - type: "normal", "warmup", "failure", or "dropset"
+                - weight_kg: Weight in kilograms (MANDATORY for weighted exercises)
+                - reps: Number of reps (MANDATORY)
+
+    Returns:
+        The created routine object from Hevy.
+    """
+    # Clean up the exercise objects to ensure they use the correct camelCase names for MCP
+    cleaned_exercises = []
+    for ex in exercises:
+        cleaned_ex = {
+            "exerciseTemplateId": ex.get("exerciseTemplateId") or ex.get("exercise_template_id"),
+            "sets": ex.get("sets", []),
+            "notes": ex.get("notes", "")
+        }
+        cleaned_exercises.append(cleaned_ex)
+
+    return await call_hevy_tool("create-routine", {
+        "title": title,
+        "exercises": cleaned_exercises
+    })
 
 
 @agent.tool
@@ -388,4 +538,100 @@ async def get_exercise_history(
             "total_improvement_lbs": round(improvement, 1)
         },
         "session_history": exercise_sessions
+    }
+
+
+@agent.tool
+async def detect_plateaus(
+    ctx: RunContext[AgentDependencies],
+    exercise_name: str,
+) -> Dict:
+    """
+    Analyze an exercise for performance plateaus.
+
+    A plateau is defined as 4 or more consecutive sessions without a significant
+    increase (> 2.5%) in Max Weight.
+
+    Use this when a user complains about being stuck, stalled, or not progressing
+    on a specific lift.
+
+    Args:
+        ctx: Run context
+        exercise_name: The exercise to analyze (e.g. "Bench Press")
+
+    Returns:
+        Analysis of recent performance including plateau status and recommendations.
+    """
+    # Reuse get_exercise_history logic to get data
+    # We look back 90 days to establish a baseline
+    history = await get_exercise_history(ctx, exercise_name, days=90)
+
+    if "message" in history and history.get("sessions_found", 0) == 0:
+        return {
+            "exercise_name": exercise_name,
+            "status": "INSUFFICIENT_DATA",
+            "message": history.get("message", "No data found")
+        }
+
+    sessions = history.get("session_history", [])
+    
+    # Need at least 4 sessions to detect a meaningful plateau
+    if len(sessions) < 4:
+        return {
+            "exercise_name": history.get("exercise_name", exercise_name),
+            "status": "INSUFFICIENT_DATA",
+            "message": f"Only found {len(sessions)} sessions. Need at least 4 to detect a plateau."
+        }
+
+    # Sort by date ascending (just to be safe, though get_exercise_history should sort them)
+    sessions.sort(key=lambda x: x["date"])
+
+    # Analyze the last 5 sessions (or fewer if we don't have 5)
+    recent_sessions = sessions[-5:]
+    
+    # Extract max weights
+    weights = [s["max_weight_lbs"] for s in recent_sessions]
+    dates = [s["date"] for s in recent_sessions]
+
+    # Calculate trend
+    first_weight = weights[0]
+    last_weight = weights[-1]
+    max_in_recent = max(weights)
+    
+    # Check for stagnation
+    # 1. No improvement from start to end of window
+    is_flat = last_weight <= first_weight * 1.025 # Less than 2.5% gain
+    
+    # 2. Fluctuating but stuck (max hasn't moved up)
+    is_stuck = last_weight < max_in_recent
+
+    # 3. Time duration
+    from datetime import datetime
+    days_stuck = (datetime.fromisoformat(dates[-1]) - datetime.fromisoformat(dates[0])).days
+
+    is_plateau = (is_flat or is_stuck) and days_stuck > 14  # At least 2 weeks of stagnation
+
+    recommendations = []
+    if is_plateau:
+        recommendations = [
+            "Implement a deload week (reduce volume by 40-50%).",
+            "Switch to a variation of this exercise (e.g., Incline instead of Flat).",
+            "Check your protein intake (aim for 1g per lb of bodyweight).",
+            "Ensure you are sleeping 7-9 hours per night.",
+            "Try changing your rep range (e.g., if doing 5x5, try 3x10)."
+        ]
+
+    return {
+        "exercise_name": history.get("exercise_name", exercise_name),
+        "status": "PLATEAU_DETECTED" if is_plateau else "PROGRESSING",
+        "analysis": {
+            "recent_sessions_analyzed": len(recent_sessions),
+            "period_days": days_stuck,
+            "starting_weight_lbs": first_weight,
+            "current_weight_lbs": last_weight,
+            "max_weight_in_period_lbs": max_in_recent,
+            "growth_percentage": round(((last_weight - first_weight) / first_weight) * 100, 2)
+        },
+        "recent_weights": weights,
+        "recommendations": recommendations if is_plateau else ["Keep pushing! You are making progress."]
     }

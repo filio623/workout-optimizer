@@ -10,7 +10,7 @@ from sqlalchemy import select
 from backend.db.database import get_db
 from backend.db.models import User
 from uuid import UUID
-from backend.routes import nutrition, apple_health, workouts
+from backend.routes import nutrition, apple_health, workouts, dashboard
 import asyncio
 
 
@@ -34,6 +34,7 @@ app.add_middleware(
 app.include_router(nutrition.router)
 app.include_router(apple_health.router)
 app.include_router(workouts.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 async def root():
