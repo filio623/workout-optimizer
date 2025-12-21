@@ -1,7 +1,7 @@
 # Workout Optimizer - Technical Guide & System Architecture
 
-**Last Updated:** December 20, 2025
-**Version:** 1.1 (MVP Candidate Ready)
+**Last Updated:** December 21, 2025
+**Version:** 1.2 (Persistent Chat Implemented)
 
 This document provides a deep technical dive into the Workout Optimizer codebase. It is designed for engineers and developers to understand the system's internal mechanics, architectural decisions, and data flows.
 
@@ -27,6 +27,7 @@ graph TD
         API[FastAPI Backend]
         Agent[Pydantic AI Agent]
         DashRoute[Dashboard Stats Route]
+        ChatService[Chat Service]
     end
     
     subgraph "Data Integration Layer"
@@ -52,9 +53,11 @@ graph TD
     Upload <-->|POST /upload| API
     
     API --> Agent
+    API --> ChatService
     Agent -->|Uses Tools| Services
     Agent -->|Uses Tools| MCP
     DashRoute -->|Aggregates| DB
+    ChatService -->|Persists History| DB
     
     MCP <-->|Stdio/JSON-RPC| HevyMCP
     HevyMCP <-->|REST| HevyAPI
@@ -101,7 +104,8 @@ We use a hybrid relational/time-series database design to handle high-frequency 
 | `nutrition_daily` | Relational | Daily macro totals + full fidelity `raw_data` JSONB. |
 | `workout_cache` | Relational | Synced summaries of workouts from Hevy/Apple Health. |
 | `health_metrics_raw` | **Hypertable** | High-frequency time-series data (Heart Rate, Energy). |
-| `chat_sessions` | Relational | Persistent storage for conversation history. |
+| `chat_sessions` | Relational | Container for conversation threads with metadata. |
+| `chat_messages` | Relational | Individual messages linked to sessions. |
 
 ---
 
@@ -129,9 +133,29 @@ Users can now ingest data directly through the UI via the "Paperclip" button in 
 ## 6. Frontend Architecture
 
 ### Component Guide
-*   **`ChatInterface.tsx`**: Manages streaming LLM state and file upload triggers.
+*   **`ChatInterface.tsx`**: Manages streaming LLM state, real-time session updates, and file upload triggers.
 *   **`ChartsSection.tsx`**: Fetches and renders dashboard visualizations using Tailwind-based progress bars and grids.
-*   **`Sidebar.tsx`**: Orchestrates the layout of stats, workout history, and charts.
+*   **`Sidebar.tsx`**: Orchestrates the layout of stats, workout history, and now manages the **Chat History** list.
+*   **`Layout.tsx`**: Lifts state (`currentSessionId`) to coordinate between Sidebar and ChatInterface.
+
+---
+
+## 7. Persistent Chat Architecture
+
+We implemented a robust persistent chat system using PostgreSQL (`chat_sessions`, `chat_messages`).
+
+### Data Flow (Streaming)
+The `/chat/stream` endpoint handles the complex lifecycle of a streaming response:
+
+1.  **Initialization**: Creates/Retrieves a `chat_session`.
+2.  **User Message**: Immediately saves the user's input to `chat_messages`.
+3.  **Handshake**: Sends the `SESSION_ID: <uuid>` as the first chunk to the frontend (allowing the URL to update instantly).
+4.  **Streaming**: Generators text chunks from the AI Agent (no DB writes during stream).
+5.  **Finalization**: In a `finally` block, aggregates the full response and saves it as a single `chat_message` record.
+
+### State Management
+*   **Backend**: `backend/services/chat_service.py` handles all DB interactions (CRUD for sessions/messages).
+*   **Frontend**: `ChatInterface.tsx` re-fetches message history whenever `sessionId` changes.
 
 ---
 
@@ -159,9 +183,11 @@ Logfire is configured in `backend/main.py` using the `LOGFIRE_TOKEN` environment
 │   │   ├── dependencies.py    # Session factory injection
 │   │   └── tools/             # AI tools (SQL/MCP wrappers)
 │   ├── routes/
-│   │   ├── dashboard.py       # NEW: Analytics aggregation
+│   │   ├── dashboard.py       # Analytics aggregation
 │   │   ├── nutrition.py       # File upload handling
 │   │   └── workouts.py        # Hevy sync handling
+│   ├── services/
+│   │   ├── chat_service.py    # Persistent chat logic
 │   ├── db/
 │   │   └── models.py          # SQLAlchemy schema
 │   └── main.py                # FastAPI entry & chat routes

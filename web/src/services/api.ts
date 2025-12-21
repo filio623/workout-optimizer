@@ -9,7 +9,61 @@ export interface Workout {
     source: string;
 }
 
-export const sendStreamingChatMessage = async (message: string, sessionId: string = 'default_user') => {
+export interface ChatSession {
+    id: string;
+    session_name: string;
+    created_at: string;
+    last_activity: string;
+}
+
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+}
+
+export const fetchChatHistory = async (): Promise<ChatSession[]> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/chat/history`, {
+            method: 'GET',
+            headers: { 'accept': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Failed to fetch chat history');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching chat history:', error);
+        throw error;
+    }
+};
+
+export const fetchSessionMessages = async (sessionId: string): Promise<ChatMessage[]> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/chat/${sessionId}`, {
+            method: 'GET',
+            headers: { 'accept': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Failed to fetch messages');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        throw error;
+    }
+};
+
+export const deleteChatSession = async (sessionId: string): Promise<void> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/chat/${sessionId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Failed to delete session');
+    } catch (error) {
+        console.error('Error deleting session:', error);
+        throw error;
+    }
+};
+
+export const sendStreamingChatMessage = async (message: string, sessionId: string | null = null) => {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/stream`, {
             method: 'POST',

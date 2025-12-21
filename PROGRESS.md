@@ -1,8 +1,8 @@
 # Workout Optimizer - Progress Log
 
-**Last Updated:** 2025-12-20 (Session 16 In Progress)
-**Current Phase:** Phase 3 - In Progress (Analysis Tools & MVP Stabilization)
-**Status:** Direct-Access Agent implemented! The agent can now query live data directly from Hevy and create new workout routines.
+**Last Updated:** 2025-12-21 (Session 17 Complete)
+**Current Phase:** Phase 3 - Complete (Analysis Tools & MVP Stabilization)
+**Status:** MVP Candidate Ready - Persistent Chat Implemented.
 
 ---
 
@@ -85,7 +85,7 @@ docker exec -it workout_optimizer_db psql -U postgres -d workout_optimizer
 - `/workouts/sync` - Sync Hevy workouts via MCP
 - `/workouts/cached` - Get cached workouts
 - `/user/profile` - Create/retrieve user profiles
-- **`/chat`** - Chat with Pydantic AI agent (NEW in Session 10!)
+- **`/chat`** - Persistent Chat with Pydantic AI agent (Updated Session 17)
 
 **✅ Data Ingestion Pipeline**
 - MyNetDiary parser: Extracts 117 nutrition columns from Excel
@@ -189,6 +189,7 @@ Workout_Optimizer/
 │   │   ├── mynetdiary.py      # Excel → Dict parser (with raw_data)
 │   │   └── apple_health.py    # JSON → Dict parser (3 methods)
 │   ├── services/
+│   │   ├── chat_service.py           # Persistent Chat Logic (Postgres)
 │   │   ├── nutrition_service.py      # UPSERT logic for nutrition data
 │   │   ├── apple_health_service.py   # UPSERT + batching + deduplication
 │   │   └── workout_service.py        # Hevy workout caching with UPSERT
@@ -508,6 +509,14 @@ Workout_Optimizer/
 - ✅ **Documentation:** Created `TECHNICAL_GUIDE.md` and updated progress/architecture plans.
 - **Outcome:** The app is now a functional "Loop": Input (Upload) -> Process (Agent/Analysis) -> Output (Chat/Dashboard) -> Monitoring (Logfire).
 
+### Session 17: Persistent Chat & History (Complete ✅)
+- **Goal:** Implement persistent chat history so conversations are saved to Postgres and can be resumed.
+- ✅ **Backend Persistence:** Implemented `backend/services/chat_service.py` to manage `chat_sessions` and `chat_messages`.
+- ✅ **API Endpoints:** Updated `/chat` and `/chat/stream` to persist messages. Added `/chat/history`, `/chat/{id}`, and `DELETE` endpoints.
+- ✅ **Frontend Integration:** Removed `localStorage`. Updated `Sidebar` to list/delete sessions and `ChatInterface` to load history.
+- ✅ **State Management:** Lifted session state to `Layout.tsx` to coordinate Sidebar and Chat components.
+- **Outcome:** Full persistent chat functionality. Users can now switch between multiple conversation threads.
+
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools
 - Implement hierarchical architecture if accuracy issues appear
@@ -523,7 +532,6 @@ Workout_Optimizer/
 5. **No File Size Limits** - Upload endpoint accepts any size file
 6. **No Data Validation** - Trust parser output without validation
 7. **Timezone Handling** - Dates assume UTC, no timezone conversion
-8. **Chat History Persistence** - Still using SQLite/Local storage. Need to switch to Postgres `chat_sessions`.
 
 ---
 
@@ -576,9 +584,9 @@ cd web && npm run dev
 
 ## 📈 Progress Metrics
 
-**Total Sessions:** 16 (completed)
-**Total Time:** ~48 hours
-**Code Written:** ~1800 lines of production code
+**Total Sessions:** 17 (completed)
+**Total Time:** ~52 hours
+**Code Written:** ~2100 lines of production code
 **Tests Passed:** End-to-end full stack working (Frontend <-> Backend <-> DB <-> LLM)
 **Data Ingested:**
 - 279 days of nutrition data (3 years)
@@ -587,8 +595,8 @@ cd web && npm run dev
 - **475 workouts cached** (10 Hevy + 465 Apple Health)
 - **38,064 kg total volume** tracked
 
-**Files Created:** 35+ (added Dashboard routes, Analysis tools, Technical Guide, Logfire config)
-**Dependencies Added:** React Markdown, Lucide Icons, Vite Proxy, Logfire
+**Files Created:** 40+ (added Chat Services, updated Frontend components)
+**Dependencies Added:** None new
 **Database Tables:** 7 (users, chat, nutrition, health metrics daily/raw, workouts)
 **Migrations Applied:** 5 (initial schema, nutrition updates, Apple Health constraints, workout constraints, bodyweight_reps)
 
@@ -600,4 +608,6 @@ We have a fully functional loop with monitoring:
 2.  **Processing:** Agent can analyze data (Plateaus, Correlations).
 3.  **Output:** Users see real-time Dashboards and get Chat coaching.
 4.  **Observability:** Logfire tracks all requests and LLM traces.
+5.  **Persistence:** Chat history is saved to PostgreSQL and accessible across sessions.
+
 **Next Up:** Phase 4 (Authentication & Multi-User Support) or rigorous Testing.

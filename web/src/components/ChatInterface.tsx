@@ -3,47 +3,24 @@ import { Send, Mic, Paperclip, MoreVertical } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import { Theme } from './ThemeSelector';
-import { sendStreamingChatMessage, uploadFile } from '../services/api';
+import { sendStreamingChatMessage, uploadFile, fetchSessionMessages, ChatMessage } from '../services/api';
 
 interface Message {
-  id: string; // Changed to string for consistency with Date.now().toString()
+  id: string;
   content: string;
-  sender: 'user' | 'bot' | 'error'; // Aligned with MessageBubble sender type, added 'error'
+  sender: 'user' | 'bot' | 'error';
   timestamp: Date;
 }
 
 interface ChatInterfaceProps {
   currentTheme: Theme;
+  sessionId: string | null;
+  onNewSessionId: (id: string) => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
-  const STORAGE_KEY = 'workout-optimizer-messages';
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme, sessionId, onNewSessionId }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const saveMessagesToStorage = (messages: Message[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    } catch (error) {
-      console.error('Failed to save messages to local storage:', error);
-    }
-  };
-
-  const loadMessagesFromStorage = (): Message[] => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const messages = JSON.parse(stored);
-        return messages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to load messages from local storage:', error);
-    }
-    return [];
-  };
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -79,13 +56,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
   };
 
   const [inputMessage, setInputMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>(loadMessagesFromStorage());
-  const [isStreaming, setIsStreaming] = useState(false); // Renamed from isLoading to isStreaming
-  const [sessionId] = useState<string>('default_user'); // Hardcoded for now
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
 
+  // Load messages when sessionId changes
   useEffect(() => {
-    saveMessagesToStorage(messages);
-  }, [messages]);
+    const loadHistory = async () => {
+      if (!sessionId) {
+        // New chat -> Show welcome message
+        const welcomeMessage: Message = {
+            id: 'welcome',
+            content: "Hi! I'm your FitBot AI assistant. I can help analyze your workout data and provide personalized recommendations. What would you like to know about your fitness progress?",
+            sender: 'bot',
+            timestamp: new Date(),
+          };
+          setMessages([welcomeMessage]);
+        return;
+      }
+
+      try {
+        const history = await fetchSessionMessages(sessionId);
+        const mappedMessages: Message[] = history.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          sender: msg.role === 'assistant' ? 'bot' : 'user',
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(mappedMessages);
+        setTimeout(scrollToBottom, 100);
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
+    loadHistory();
+  }, [sessionId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -93,19 +98,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
     }, 100);
     return () => clearTimeout(timer);
   }, [messages, isStreaming]);
-
-  // Add welcome message if no messages exist (only once)
-  useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeMessage: Message = {
-        id: 'welcome',
-        content: "Hi! I'm your FitBot AI assistant. I can help analyze your workout data and provide personalized recommendations. What would you like to know about your fitness progress?",
-        sender: 'bot',
-        timestamp: new Date(),
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleSend = async () => {
     if (inputMessage.trim() && !isStreaming) {
@@ -128,12 +120,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
       try {
         const reader = await sendStreamingChatMessage(userText, sessionId);
         let receivedContent = '';
+        let isFirstChunk = true;
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = new TextDecoder().decode(value);
+          let chunk = new TextDecoder().decode(value);
+
+          // Check for Session ID in first chunk
+          if (isFirstChunk) {
+            // Chunk might be "SESSION_ID:xyz\nActual content..."
+            const match = chunk.match(/^SESSION_ID:(.*?)\n/);
+            if (match) {
+               const newSessionId = match[1].trim();
+               if (!sessionId) {
+                   onNewSessionId(newSessionId);
+               }
+               // Remove the session ID line from content
+               chunk = chunk.substring(match[0].length);
+            }
+            isFirstChunk = false;
+          }
+
           receivedContent += chunk;
 
           // Update the content of the AI message as chunks arrive
@@ -237,6 +246,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
         {isStreaming && <TypingIndicator currentTheme={currentTheme} />}
 
         {/* Welcome suggestions */}
+        {messages.length <= 1 && (
         <div className="flex flex-wrap gap-2 mt-8">
           {[
             "Analyze my weekly progress",
@@ -253,6 +263,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme }) => {
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {/* Input Area */}

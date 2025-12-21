@@ -1717,12 +1717,11 @@ export const api = {
 - Alembic migrations working
 - ✅ FastAPI endpoints can use PostgreSQL (Phase 1.5)
 
-**Important Note on Chat History (Decision 2025-11-11):**
-- Chat history tables (`chat_sessions`, `chat_messages`) are created in PostgreSQL but NOT YET IN USE
-- Currently using `agents.SQLiteSession` for chat history (temporary)
-- Will migrate chat to PostgreSQL in Phase 2 or Phase 3
-- This phased approach allows focusing on new features (nutrition, health data) first
-- PostgreSQL chat models are ready when we're ready to migrate
+**Important Note on Chat History (Completed 2025-12-21):**
+- Chat history tables (`chat_sessions`, `chat_messages`) are fully implemented and in use.
+- Backend services (`backend/services/chat_service.py`) manage persistence.
+- Frontend (`Sidebar.tsx`, `ChatInterface.tsx`) fully integrates with persistent history.
+- The temporary `agents.SQLiteSession` has been replaced.
 
 **Resources**:
 - [SQLAlchemy 2.0 Tutorial](https://docs.sqlalchemy.org/en/20/tutorial/)
@@ -1790,7 +1789,7 @@ curl -X POST http://localhost:8000/upload/nutrition \
 
 ---
 
-### Phase 3: Pydantic AI & MCP Integration (Week 3) - UPDATED 2025-12-08
+### Phase 3: Pydantic AI & MCP Integration (Week 3) - COMPLETED 2025-12-21
 
 **Learning Focus**: Pydantic AI, Agent architecture patterns, Tool orchestration
 
@@ -1806,12 +1805,13 @@ curl -X POST http://localhost:8000/upload/nutrition \
 4. ✅ **Session 10:** Build first agent with core tools (2 tools: nutrition_stats, recent_workouts)
 5. ✅ **Session 10:** Add /chat endpoint to FastAPI (POST /chat)
 6. ✅ **Session 10:** Test with real data (140 days nutrition, agent working!)
-7. ⏳ **Session 11:** Port 8-12 additional tools from backend/llm/tools/
-8. ⏳ **Session 12:** Integrate Hevy MCP tools with agent
-9. ⏳ **Session 13:** Implement streaming responses
+7. ✅ **Session 11:** Port 8-12 additional tools from backend/llm/tools/
+8. ✅ **Session 12:** Integrate Hevy MCP tools with agent
+9. ✅ **Session 13:** Implement streaming responses
 10. ✅ **Session 13:** Test agent with complex multi-source queries
 11. ✅ **Session 14:** Optimize context management and session persistence
 12. ✅ **Session 16:** Implement Logfire monitoring for full observability
+13. ✅ **Session 17:** Implement Persistent Chat (PostgreSQL)
 
 **Session 10 Accomplishments:**
 - ✅ Legacy code removed (`backend/hevy/`, commented out `workout_analyzer`)
@@ -1822,9 +1822,9 @@ curl -X POST http://localhost:8000/upload/nutrition \
 - ✅ Tested with real queries ("average protein last 7 days" → "131.3g/day")
 
 **Remaining Success Criteria**:
-- ⏳ Port more tools from backend/llm/tools/
-- ⏳ Can call MCP tools (get workouts from Hevy via MCP)
-- ⏳ Conversation history persists in PostgreSQL (currently using temp session)
+- ✅ Port more tools from backend/llm/tools/
+- ✅ Can call MCP tools (get workouts from Hevy via MCP)
+- ✅ Conversation history persists in PostgreSQL
 - ⏳ Can switch between Claude and GPT-4 (currently hardcoded to Claude)
 
 **Resources**:
