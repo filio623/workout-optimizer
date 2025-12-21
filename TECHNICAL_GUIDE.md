@@ -1,7 +1,7 @@
 # Workout Optimizer - Technical Guide & System Architecture
 
 **Last Updated:** December 21, 2025
-**Version:** 1.2 (Persistent Chat Implemented)
+**Version:** 1.2 (Sovereign Cloud Migration)
 
 This document provides a deep technical dive into the Workout Optimizer codebase. It is designed for engineers and developers to understand the system's internal mechanics, architectural decisions, and data flows.
 
@@ -43,7 +43,7 @@ graph TD
     end
     
     subgraph "Persistence Layer"
-        DB[(PostgreSQL + TimescaleDB)]
+        DB[(PostgreSQL + TimescaleDB on NAS)]
         HevyMCP[Hevy MCP Server]
     end
 
@@ -62,7 +62,7 @@ graph TD
     MCP <-->|Stdio/JSON-RPC| HevyMCP
     HevyMCP <-->|REST| HevyAPI
     
-    Services -->|Read/Write| DB
+    Services -->|Read/Write via Tailscale| DB
     Parsers -->|Transform| Services
     
     AppleHealth -->|JSON| Parsers
@@ -93,9 +93,15 @@ When a user asks a complex question like *"Why is my bench press stuck?"*, the a
 
 ---
 
-## 3. Data Layer: PostgreSQL + TimescaleDB
+## 3. Data Layer: PostgreSQL + TimescaleDB (Sovereign Cloud)
 
 We use a hybrid relational/time-series database design to handle high-frequency health data and complex relationship data.
+
+### Hosting & Connectivity
+*   **Hardware**: Synology DS1522+ NAS (RAID-protected storage).
+*   **Software**: Container Manager running `timescale/timescaledb:latest-pg16`.
+*   **Network**: Tailscale VPN provides a secure, encrypted tunnel from the development machine to the NAS.
+*   **Port**: `5433` (Host) -> `5432` (Container).
 
 ### Key Tables
 

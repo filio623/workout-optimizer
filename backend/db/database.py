@@ -10,9 +10,10 @@ This module provides:
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from typing import AsyncGenerator
 from backend.db.models import Base
+from backend.config import settings
 
 
-DATABASE_URL = "postgresql+asyncpg://postgres:workout_dev_password@localhost/workout_optimizer"
+DATABASE_URL = settings.DATABASE_URL
 
 #create async engine
 engine = create_async_engine(

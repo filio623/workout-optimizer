@@ -1937,7 +1937,7 @@ npx expo start
 
 ---
 
-### Phase 6: Self-Hosting & Deployment (Synology NAS)
+### Phase 6: Self-Hosting & Deployment (Synology NAS) - COMPLETED 2025-12-21
 
 **Strategy**: "Sovereign Cloud" - Self-host on personal Synology DS1522+ for privacy, zero cost, and full control.
 
@@ -1947,24 +1947,25 @@ npx expo start
 - **Orchestration**: Docker Compose
 
 **Tasks**:
-1. ✅ **Containerization**:
+1. ✅ **Database Migration**:
+   - Set up TimescaleDB container on Synology.
+   - Migrated local data using `pg_dump`.
+   - Updated app config to use NAS static Tailscale IP.
+2. ⏳ **Backend Containerization**:
    - Create multi-stage `Dockerfile` for Backend (Python + Node.js for MCP)
+   - Transfer and run Backend on Synology.
+3. ⏳ **Frontend Deployment**:
    - Create multi-stage `Dockerfile` for Frontend (Node.js Build → Nginx Serve)
-2. ⏳ **Orchestration**:
-   - Create `docker-compose.prod.yml` specifically for Synology architecture
-   - Configure persistent volumes for PostgreSQL to map to NAS shared folders
-3. ⏳ **Deployment**:
-   - Transfer project to NAS (Git pull or SCP)
-   - Launch stack via Synology Container Manager
-4. ⏳ **Security & Access**:
-   - Install Tailscale on Synology
-   - Install Tailscale on iPhone
-   - Verify secure access via private IP (e.g., `http://100.x.y.z`)
+   - Serve Frontend from Synology.
+4. ✅ **Security & Access**:
+   - Install Tailscale on Synology.
+   - Install Tailscale on dev machine.
+   - Verify secure access via private IP (e.g., `100.x.y.z`).
 
 **Success Criteria**:
-- App accessible from iPhone via Tailscale VPN
-- Database persists across container restarts
-- No monthly cloud bills
+- App accessible from iPhone via Tailscale VPN.
+- Database persists across container restarts.
+- No monthly cloud bills.
 
 ---
 

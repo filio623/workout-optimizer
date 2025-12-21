@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     # API Keys (Required)
     OPENAI_API_KEY: str = Field(..., description="OpenAI API Key")
     HEVY_API_KEY: str = Field(..., description="Hevy API Key")
+    DATABASE_URL: str = Field(..., description="Database Connection URL")
     
     # API Keys (Optional)
     ANTHROPIC_API_KEY: Optional[str] = Field(None, description="Anthropic API Key")
