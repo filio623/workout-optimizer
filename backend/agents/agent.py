@@ -31,6 +31,8 @@ agent = Agent(
   - Create and manage workout routines in Hevy
   - Identify patterns and trends across nutrition, workouts, and health metrics
 
+  IMPORTANT: When you need to fetch data, call the tool IMMEDIATELY. Do not output text like "Let's check..." before the tool call.
+
   Tool Usage Strategy:
   - **Live Data**: For a workout the user just finished or for their most current routines, use `get_live_workouts` or `get_live_routines`. These query Hevy directly.
   - **Long-term Trends**: For historical analysis (weeks/months), use `get_recent_workouts` or `get_workout_analysis` (which query the local database cache).

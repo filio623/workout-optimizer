@@ -68,6 +68,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme, sessionId, 
 
   // Load messages when sessionId changes
   useEffect(() => {
+    // If we are streaming, we are likely generating the first message for this session ID.
+    // We shouldn't overwrite the local streaming state with DB history (which might be incomplete).
+    if (isStreaming) return;
+
     const loadHistory = async () => {
       if (!sessionId) {
         // New chat -> Show welcome message
@@ -97,7 +101,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme, sessionId, 
     };
 
     loadHistory();
-  }, [sessionId]);
+  }, [sessionId, isStreaming]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

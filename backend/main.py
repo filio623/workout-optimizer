@@ -21,6 +21,13 @@ from backend.services.chat_service import (
 )
 import asyncio
 import logfire
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelRequest,
+    ModelResponse,
+    TextPart,
+    UserPromptPart,
+)
 
 
 # Configure Logfire
@@ -210,18 +217,27 @@ async def chat(request: ChatRequest, db: AsyncSession = Depends(get_db)):
         session = await get_or_create_session(db, TEST_USER_ID, request.session_id)
         session_id_str = str(session.id)
 
-        # 2. Save User Message
+        # 2. Load History
+        history_objs = await get_session_messages(db, session_id_str, TEST_USER_ID)
+        message_history: list[ModelMessage] = []
+        for m in history_objs:
+            if m.role == "user":
+                message_history.append(ModelRequest(parts=[UserPromptPart(content=m.content)]))
+            elif m.role == "assistant":
+                message_history.append(ModelResponse(parts=[TextPart(content=m.content)]))
+
+        # 3. Save current User Message
         await save_message(db, session.id, "user", request.message)
 
-        # 3. Run Agent
+        # 4. Run Agent
         deps = AgentDependencies(
             session_factory=AsyncSessionLocal,
             user_id=TEST_USER_ID
         )
 
-        result = await agent.run(request.message, deps=deps)
+        result = await agent.run(request.message, deps=deps, message_history=message_history)
         
-        # 4. Save Agent Response
+        # 5. Save Agent Response
         await save_message(db, session.id, "assistant", result.output)
 
         return ChatResponse(
@@ -243,6 +259,15 @@ async def chat_stream(request: ChatRequest):
             session = await get_or_create_session(db, TEST_USER_ID, request.session_id)
             session_id_str = str(session.id)
             
+            # Load history before saving current message
+            history_objs = await get_session_messages(db, session_id_str, TEST_USER_ID)
+            message_history: list[ModelMessage] = []
+            for m in history_objs:
+                if m.role == "user":
+                    message_history.append(ModelRequest(parts=[UserPromptPart(content=m.content)]))
+                elif m.role == "assistant":
+                    message_history.append(ModelResponse(parts=[TextPart(content=m.content)]))
+
             # Save User Message immediately
             await save_message(db, session.id, "user", request.message)
 
@@ -254,16 +279,12 @@ async def chat_stream(request: ChatRequest):
         async def generate():
             full_response = ""
             try:
-                # Emit session ID as the first chunk (custom format or just header?)
-                # For simplicity, we just stream text. Client handles session ID separately?
-                # Actually, standard is to return session ID in a header or separate event.
-                # For this MVP, let's assume client keeps using the ID we sent back or knows it.
-                # To be robust, we should probably send it first.
+                # Emit session ID as the first chunk
                 yield f"SESSION_ID:{session_id_str}\n"
 
                 async with asyncio.timeout(60):
                     prev_text = ""
-                    async with agent.run_stream(request.message, deps=deps) as stream:
+                    async with agent.run_stream(request.message, deps=deps, message_history=message_history) as stream:
                         async for chunk in stream.stream_text():
                             new_text = chunk[len(prev_text):]
                             full_response += new_text
