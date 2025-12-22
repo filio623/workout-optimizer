@@ -13,43 +13,75 @@ from backend.db.models import WorkoutCache
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta, UTC
 from backend.mcp_client import call_hevy_tool
-from backend.services.workout_service import deduplicate_workouts
+from backend.services.workout_service import deduplicate_workouts, sync_hevy_workouts
 
 # Conversion constant
 KG_TO_LBS = 2.20462
 
-def _convert_workout_to_lbs(workout: Dict[str, Any]) -> Dict[str, Any]:
-    """Helper to convert a detailed Hevy workout/routine from kg to lbs."""
-    if not workout or 'exercises' not in workout:
-        return workout
-        
-    for exercise in workout.get('exercises', []):
-        for set_data in exercise.get('sets', []):
-            if set_data.get('weight_kg') is not None:
-                set_data['weight_lbs'] = round(set_data['weight_kg'] * KG_TO_LBS, 1)
-    return workout
+# ... (Helper and get_recent_workouts)
+
+@agent.tool
+async def sync_workout_data(
+    ctx: RunContext[AgentDependencies],
+) -> Dict:
+    """
+    Manually trigger a sync of workout data from Hevy to the local cache.
+
+    Use this tool if the user asks to "sync", "refresh", or "update" their workout data,
+    or if they say they just finished a workout.
+
+    Args:
+        ctx: The run context
+
+    Returns:
+        Summary of the sync operation.
+    """
+    async with ctx.deps.session_factory() as db:
+        result = await sync_hevy_workouts(
+            db=db,
+            user_id=ctx.deps.user_id,
+            page_size=10,
+            sync_all=False  # Just get the latest page for speed
+        )
+        return {
+            "status": "success",
+            "message": result.get('message', "Sync complete."),
+            "workouts_synced": result.get('total_processed', 0)
+        }
+
 
 @agent.tool
 async def get_recent_workouts(
     ctx: RunContext[AgentDependencies],
     limit: int = 10,
+    refresh: bool = False,
 ) -> List[Dict]:
     """
     Get the user's recent workouts from the local cache.
 
     This tool queries the database which contains synced workouts from
     both Hevy and Apple Health. Returns workout summaries.
-    For the absolute latest workout (just finished), use get_live_workouts instead.
 
     Args:
         ctx: The run context containing session_factory and user_id
         limit: Maximum number of workouts to return (default: 10)
+        refresh: If True, triggers a sync with Hevy before returning data.
 
     Returns:
         List of workout dictionaries, ordered by date (newest first)
     """
 
-    # Create own database session for parallel execution
+    # 1. Opportunistic Sync
+    # If the user asks for very few workouts (likely checking the latest)
+    # or explicitly requests a refresh, we trigger a shallow sync.
+    if refresh or limit <= 5:
+        async with ctx.deps.session_factory() as db_sync:
+            try:
+                await sync_hevy_workouts(db_sync, ctx.deps.user_id, page_size=10)
+            except Exception as e:
+                print(f"Warning: Opportunistic sync failed: {e}")
+
+    # 2. Query the database
     async with ctx.deps.session_factory() as db:
         # Query the database
         stmt = (
