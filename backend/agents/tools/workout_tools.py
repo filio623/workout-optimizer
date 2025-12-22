@@ -18,7 +18,16 @@ from backend.services.workout_service import deduplicate_workouts, sync_hevy_wor
 # Conversion constant
 KG_TO_LBS = 2.20462
 
-# ... (Helper and get_recent_workouts)
+def _convert_workout_to_lbs(workout: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper to convert a detailed Hevy workout/routine from kg to lbs."""
+    if not workout or 'exercises' not in workout:
+        return workout
+        
+    for exercise in workout.get('exercises', []):
+        for set_data in exercise.get('sets', []):
+            if set_data.get('weight_kg') is not None:
+                set_data['weight_lbs'] = round(set_data['weight_kg'] * KG_TO_LBS, 1)
+    return workout
 
 @agent.tool
 async def sync_workout_data(
