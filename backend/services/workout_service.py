@@ -57,9 +57,13 @@ def deduplicate_workouts(workouts: List[WorkoutCache]) -> List[WorkoutCache]:
     Strategy:
     1. Keep all Hevy workouts (Source of Truth).
     2. For each Apple Health workout, check if it starts within 30 minutes 
-       of any Hevy workout.
-    3. If it overlaps, assume it's a duplicate entry and discard it.
-    4. If it doesn't overlap (e.g. a separate morning walk), keep it.
+       of any Hevy workout (direct overlap).
+    3. Also check for Timezone-shifted duplicates (e.g. Hevy in UTC, Apple in EST):
+       - If duration matches (within 2 mins)
+       - AND start time matches modulo 1 hour (within 5 mins)
+       - AND start time within 24 hours.
+    4. If it overlaps/matches, assume it's a duplicate entry and discard it.
+    5. If it doesn't overlap (e.g. a separate morning walk), keep it.
     """
     if not workouts:
         return []
@@ -73,17 +77,34 @@ def deduplicate_workouts(workouts: List[WorkoutCache]) -> List[WorkoutCache]:
         return workouts
 
     # Create a list of Hevy start times for quick lookup
-    hevy_times = [w.workout_date for w in hevy_workouts]
+    hevy_data = [(w.workout_date, w.duration_minutes or 0) for w in hevy_workouts]
     
     filtered_others = []
     for other in other_workouts:
         is_duplicate = False
-        for h_time in hevy_times:
-            # Check overlap window (30 minutes)
+        other_dur = other.duration_minutes or 0
+        
+        for h_time, h_dur in hevy_data:
+            # Time difference in seconds
             delta = abs((other.workout_date - h_time).total_seconds())
-            if delta < 1800:  # 30 minutes in seconds
+            
+            # 1. Direct Overlap Check (< 30 minutes)
+            if delta < 1800:
                 is_duplicate = True
                 break
+                
+            # 2. Timezone Shift Check
+            # Check if duration matches closely (within 2 mins)
+            if abs(other_dur - h_dur) <= 2:
+                # Check if start time is roughly same time of day (modulo hour)
+                # allowing for 5 min drift
+                # We also assume duplicate must be within 24 hours (usually same day)
+                if delta < 86400: 
+                    remainder = delta % 3600
+                    # Check if remainder is close to 0 (0-5 mins) or close to 3600 (55-60 mins)
+                    if remainder < 300 or remainder > 3300:
+                        is_duplicate = True
+                        break
         
         if not is_duplicate:
             filtered_others.append(other)

@@ -13,6 +13,7 @@ from backend.db.models import WorkoutCache
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta, UTC
 from backend.mcp_client import call_hevy_tool
+from backend.services.workout_service import deduplicate_workouts
 
 # Conversion constant
 KG_TO_LBS = 2.20462
@@ -55,15 +56,21 @@ async def get_recent_workouts(
             select(WorkoutCache)
             .where(WorkoutCache.user_id == ctx.deps.user_id)
             .order_by(WorkoutCache.workout_date.desc())
-            .limit(limit)
+            .limit(limit * 2)  # Fetch more to allow for deduplication
         )
 
         result = await db.execute(stmt)
         workouts = result.scalars().all()
 
+        # Filter out duplicates (Apple Health overlapping with Hevy)
+        unique_workouts = deduplicate_workouts(list(workouts))
+        
+        # Apply the original limit after filtering
+        unique_workouts = unique_workouts[:limit]
+
         #Format the results
         formatted_workouts = []
-        for workout in workouts:
+        for workout in unique_workouts:
             # Convert volume from kg to lbs for consistency with health metrics
             volume_kg = float(workout.total_volume_kg) if workout.total_volume_kg else 0
             volume_lbs = volume_kg * KG_TO_LBS
@@ -283,6 +290,9 @@ async def get_workout_analysis(
 
         result = await db.execute(stmt)
         workouts = result.scalars().all()
+
+        # Deduplicate workouts
+        workouts = deduplicate_workouts(list(workouts))
 
     # Handle no data case
     if not workouts:
