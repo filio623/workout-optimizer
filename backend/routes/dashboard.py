@@ -33,6 +33,7 @@ try:
     if not templates_path.exists():
         print(f"ERROR: Template file not found at {templates_path.resolve()}", flush=True)
         TEMPLATE_MAP = {}
+        TEMPLATE_NAME_MAP = {}
     else:
         with open(templates_path, "r") as f:
             data = json.load(f)
@@ -48,10 +49,15 @@ try:
 
             # Create a mapping: template_id -> primary_muscle_group
             TEMPLATE_MAP = {t["id"]: t.get("primary_muscle_group", "other") for t in templates_list}
+            
+            # Create a mapping: lowercase_title -> primary_muscle_group
+            TEMPLATE_NAME_MAP = {t["title"].lower(): t.get("primary_muscle_group", "other") for t in templates_list}
+            
             print(f"DEBUG: Successfully loaded {len(TEMPLATE_MAP)} templates.", flush=True)
 except Exception as e:
     print(f"Warning: Could not load exercise templates: {e}", flush=True)
     TEMPLATE_MAP = {}
+    TEMPLATE_NAME_MAP = {}
 
 def map_workout_to_category(title: str) -> str:
     """Fall back categorization for workouts without muscle group data."""
@@ -144,15 +150,14 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
                     # Try to find a template with this name
                     ex_name = ex['name'].lower()
                     
-                    # We iterate through loaded templates to find a match by name
-                    # Note: We rely on TEMPLATE_MAP keys being IDs. We need the original list or a name map.
-                    # Since we only have TEMPLATE_MAP (id -> group), we can't easily do name lookup without
-                    # reloading or restructuring. However, the data loading block above has `templates_list`.
-                    # But that variable is local to the try/except block.
-                    # 
-                    # Solution: We will rely primarily on ID lookup which should cover 99% of Hevy data.
-                    # The name fallback is a nice-to-have but less critical than the camelCase fix.
-                    pass
+                    # Direct match
+                    if ex_name in TEMPLATE_NAME_MAP:
+                        m_groups.append(TEMPLATE_NAME_MAP[ex_name].capitalize())
+                    # Strip suffix like " (barbell)" or " (dumbbell)" if no direct match
+                    elif "(" in ex_name:
+                        base_name = ex_name.split("(")[0].strip()
+                        if base_name in TEMPLATE_NAME_MAP:
+                             m_groups.append(TEMPLATE_NAME_MAP[base_name].capitalize())
 
                 # Option C: Embedded muscle_group field
                 elif 'muscle_group' in ex:

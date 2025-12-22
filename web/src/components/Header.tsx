@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, User, Settings, Bell } from 'lucide-react';
-import ThemeSelector, { Theme, themes } from './ThemeSelector';
+import ThemeSelector from './ThemeSelector';
+import { Theme } from '../data/themes';
 
 interface HeaderProps {
   sidebarOpen: boolean;

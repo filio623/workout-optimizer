@@ -517,6 +517,14 @@ Workout_Optimizer/
 - ✅ **State Management:** Lifted session state to `Layout.tsx` to coordinate Sidebar and Chat components.
 - **Outcome:** Full persistent chat functionality. Users can now switch between multiple conversation threads.
 
+### Session 18: MVP Bug Fixes (Complete ✅)
+- **Goal:** Fix the "No workout data found" bug in the Dashboard Muscle Group chart.
+- ✅ **Root Cause:** Some Hevy data (historical or from specific exports) lacked `exercise_template_id`, causing ID-based lookups to fail.
+- ✅ **Fix Implemented:** Added a robust Name-based fallback system.
+- ✅ **Backend Update:** Modified `backend/routes/dashboard.py` to build a `TEMPLATE_NAME_MAP` and fallback to name matching if ID fails.
+- ✅ **Service Enhancement:** Updated `backend/services/workout_service.py` to populate the `muscle_groups` column during sync (Write-time optimization).
+- **Outcome:** Dashboard now correctly displays muscle group split for all workouts, regardless of data version.
+
 ### Later: Consider Supervisor Pattern (if needed)
 - Evaluate if single agent struggles with 20+ tools
 - Implement hierarchical architecture if accuracy issues appear
@@ -525,7 +533,7 @@ Workout_Optimizer/
 
 ## 🐛 Known Issues / Tech Debt
 
-1. **Muscle Group Chart:** Currently showing "No workout data found" despite Hevy data being present. Template ID lookup (`exercise_templates_cache.json`) may still have an unresolved mapping issue.
+1. **Muscle Group Chart:** (FIXED Session 18)
 2. **Legacy Code Present** - `backend/llm/` uses old agents library (kept for reference, may port useful tools)
 3. **Test User Hardcoded** - Need proper authentication (Phase 4)
 4. **No Error Handling for Malformed Excel** - Parser assumes correct format

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Menu, X, Activity, BarChart3, Calendar, User, Settings, Send, Mic } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { Theme, themes } from './ThemeSelector';
+import { Theme, themes } from '../data/themes';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

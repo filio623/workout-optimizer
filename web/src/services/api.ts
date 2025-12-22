@@ -23,6 +23,10 @@ export interface ChatMessage {
     timestamp: string;
 }
 
+interface ApiError extends Error {
+    status?: number;
+}
+
 export const fetchChatHistory = async (): Promise<ChatSession[]> => {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/history`, {
@@ -77,8 +81,8 @@ export const sendStreamingChatMessage = async (message: string, sessionId: strin
         });
 
         if (!response.ok) {
-            const error = new Error('Failed to start streaming chat message');
-            (error as any).status = response.status;
+            const error = new Error('Failed to start streaming chat message') as ApiError;
+            error.status = response.status;
             throw error;
         }
 
@@ -114,8 +118,8 @@ export const getRecentWorkouts = async (): Promise<Workout[]> => {
             }
         });
         if (!response.ok) {
-            const error = new Error('Failed to fetch recent workouts');
-            (error as any).status = response.status;
+            const error = new Error('Failed to fetch recent workouts') as ApiError;
+            error.status = response.status;
             throw error;
         }
 
@@ -151,8 +155,8 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
             }
         });
         if (!response.ok) {
-            const error = new Error('Failed to fetch dashboard stats');
-            (error as any).status = response.status;
+            const error = new Error('Failed to fetch dashboard stats') as ApiError;
+            error.status = response.status;
             throw error;
         }
         return await response.json();
@@ -176,8 +180,8 @@ export const sendChatMessage = async (message: string, sessionId: string = 'defa
         });
 
         if (!response.ok) {
-            const error = new Error('Failed to send message');
-            (error as any).status = response.status;
+            const error = new Error('Failed to send message') as ApiError;
+            error.status = response.status;
             throw error;
         }
 
@@ -189,7 +193,7 @@ export const sendChatMessage = async (message: string, sessionId: string = 'defa
     }
 };
 
-export const uploadFile = async (file: File): Promise<any> => {
+export const uploadFile = async (file: File): Promise<unknown> => {
     try {
         const formData = new FormData();
         formData.append('file', file);
@@ -215,13 +219,13 @@ export const uploadFile = async (file: File): Promise<any> => {
         });
 
         if (!response.ok) {
-            const error = new Error('Failed to upload file');
-            (error as any).status = response.status;
+            const error = new Error('Failed to upload file') as ApiError;
+            error.status = response.status;
             // Try to get error details from response
             try {
                 const errData = await response.json();
                 error.message = errData.detail || 'Failed to upload file';
-            } catch (e) {
+            } catch {
                 // ignore
             }
             throw error;

@@ -6,13 +6,48 @@ Uses Model Context Protocol (MCP) for standardized Hevy integration.
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
-from typing import Dict, List
+from typing import Dict, List, Set
 from datetime import datetime, timedelta
 from pathlib import Path
 import uuid
 import json
 from backend.db.models import WorkoutCache
 from backend.mcp_client import call_hevy_tool
+
+# Load exercise templates for fast lookup
+try:
+    # backend/services/workout_service.py -> backend/services -> backend -> root
+    root_dir = Path(__file__).parent.parent.parent
+    cache_path = root_dir / "cache" / "exercise_templates_cache.json"
+    data_path = root_dir / "backend" / "data" / "exercise_templates.json"
+    
+    templates_path = cache_path
+    if not templates_path.exists():
+        templates_path = data_path
+    
+    if templates_path.exists():
+        with open(templates_path, "r") as f:
+            data = json.load(f)
+            # Handle both list (legacy) and dict wrapper (current) formats
+            if isinstance(data, dict) and "exercises" in data:
+                templates_list = data["exercises"]
+            elif isinstance(data, list):
+                templates_list = data
+            else:
+                templates_list = []
+
+            # Create mappings
+            TEMPLATE_MAP = {t["id"]: t.get("primary_muscle_group", "other") for t in templates_list}
+            TEMPLATE_NAME_MAP = {t["title"].lower(): t.get("primary_muscle_group", "other") for t in templates_list}
+            print(f"DEBUG: WorkoutService loaded {len(TEMPLATE_MAP)} templates.", flush=True)
+    else:
+        print(f"WARNING: Template file not found at {templates_path}", flush=True)
+        TEMPLATE_MAP = {}
+        TEMPLATE_NAME_MAP = {}
+except Exception as e:
+    print(f"Warning: WorkoutService could not load exercise templates: {e}", flush=True)
+    TEMPLATE_MAP = {}
+    TEMPLATE_NAME_MAP = {}
 
 
 def deduplicate_workouts(workouts: List[WorkoutCache]) -> List[WorkoutCache]:
@@ -108,6 +143,31 @@ def _calculate_workout_metrics(workout: dict) -> dict:
         'exercise_count': exercise_count,
     }
 
+def _extract_muscle_groups(workout: dict) -> List[str]:
+    """Extract distinct muscle groups from workout exercises using ID or Name lookup."""
+    muscle_groups = set()
+    for ex in workout.get('exercises', []):
+        # 1. ID Lookup
+        tid = ex.get('exercise_template_id') or ex.get('exerciseTemplateId')
+        if tid and tid in TEMPLATE_MAP:
+            muscle_groups.add(TEMPLATE_MAP[tid])
+            continue
+            
+        # 2. Name Lookup
+        name = ex.get('name', '').lower()
+        if name in TEMPLATE_NAME_MAP:
+            muscle_groups.add(TEMPLATE_NAME_MAP[name])
+        elif "(" in name:
+            # Try stripping suffix like "Bench Press (Barbell)" -> "Bench Press"
+            base = name.split("(")[0].strip()
+            if base in TEMPLATE_NAME_MAP:
+                 muscle_groups.add(TEMPLATE_NAME_MAP[base])
+                 
+        # 3. Direct field (rare but possible in some exports)
+        if 'muscle_group' in ex:
+             muscle_groups.add(ex['muscle_group'])
+             
+    return list(muscle_groups)
 
 async def sync_hevy_workouts(
     db: AsyncSession,
@@ -154,6 +214,9 @@ async def sync_hevy_workouts(
         for workout in workouts:
             # Calculate metrics
             metrics = _calculate_workout_metrics(workout)
+            
+            # Extract muscle groups
+            muscle_groups = _extract_muscle_groups(workout)
 
             # Parse workout date - handle both camelCase (MCP) and snake_case (REST)
             start_time = workout.get('startTime') or workout.get('start_time')
@@ -173,7 +236,7 @@ async def sync_hevy_workouts(
                 'bodyweight_reps': metrics['bodyweight_reps'],
                 'exercise_count': metrics['exercise_count'],
                 'calories_burned': None,  # Hevy doesn't provide this
-                'muscle_groups': None,  # Could extract from exercise templates later
+                'muscle_groups': muscle_groups,  # Now populated!
                 'workout_data': workout,  # Store complete raw data
             }
             records_to_insert.append(record)

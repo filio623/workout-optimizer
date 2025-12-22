@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, Paperclip, MoreVertical } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
-import { Theme } from './ThemeSelector';
-import { sendStreamingChatMessage, uploadFile, fetchSessionMessages, ChatMessage } from '../services/api';
+import { Theme } from '../data/themes';
+import { sendStreamingChatMessage, uploadFile, fetchSessionMessages } from '../services/api';
 
 interface Message {
   id: string;
@@ -28,20 +28,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme, sessionId, 
     }
   };
 
-  const getErrorMessage = (error: any): string => {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+  const getErrorMessage = (error: unknown): string => {
+    interface FetchError {
+      name?: string;
+      message?: string;
+      status?: number;
+    }
+    const err = error as FetchError;
+    
+    if (err.name === 'TypeError' && err.message?.includes('fetch')) {
       return "Can't connect to server. Check your internet connection and make sure the backend is running.";
     }
-    if (error.name === 'AbortError' && error.message.includes('timeout')) {
+    if (err.name === 'AbortError' && err.message?.includes('timeout')) {
       return "Request timed out. The AI is busy, please try again in a moment.";
     }
-    if (error.status) {
-      switch (error.status) {
+    if (err.status) {
+      switch (err.status) {
         case 500: return "Server error. The AI might be temporarily unavailable.";
         case 429: return "Too many requests. Please wait a moment before trying again.";
         case 401: return "Authentication error. Please check your API keys.";
         case 404: return "Service not found. Please check if the backend is running.";
-        default: return `Server returned error ${error.status}. Please try again.`
+        default: return `Server returned error ${err.status}. Please try again.`
       }
     }
     return "Something went wrong please try again.";
@@ -234,14 +241,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ currentTheme, sessionId, 
 
       {/* Messages Area */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={{
-            id: typeof msg.id === 'string' ? parseInt(msg.id) || 0 : parseInt(msg.id), // Ensure ID is number for MessageBubble
-            content: msg.content,
-            sender: msg.sender === 'error' ? 'bot' : msg.sender, // Render error messages as bot messages
-            timestamp: formatTime(msg.timestamp)
-          }} currentTheme={currentTheme} />
-        ))}
+        {messages.map((msg) => {
+          // Skip empty bot messages to prevent empty bubbles while streaming 
+          // (TypingIndicator handles the 'thinking' state visually)
+          if ((msg.sender === 'bot' || msg.sender === 'error') && !msg.content) return null;
+
+          return (
+            <MessageBubble key={msg.id} message={{
+              id: typeof msg.id === 'string' ? parseInt(msg.id) || 0 : parseInt(msg.id), // Ensure ID is number for MessageBubble
+              content: msg.content,
+              sender: msg.sender === 'error' ? 'bot' : msg.sender, // Render error messages as bot messages
+              timestamp: formatTime(msg.timestamp)
+            }} currentTheme={currentTheme} />
+          );
+        })}
 
         {isStreaming && <TypingIndicator currentTheme={currentTheme} />}
 
