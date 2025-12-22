@@ -1,7 +1,7 @@
 # Workout Optimizer - Technical Guide & System Architecture
 
-**Last Updated:** December 21, 2025
-**Version:** 1.2 (Sovereign Cloud Migration)
+**Last Updated:** December 22, 2025
+**Version:** 1.3 (Robustness Update)
 
 This document provides a deep technical dive into the Workout Optimizer codebase. It is designed for engineers and developers to understand the system's internal mechanics, architectural decisions, and data flows.
 
@@ -130,9 +130,14 @@ This route bypasses the AI Agent for speed and performs direct SQL aggregations:
 ## 5. Data Ingestion Pipelines
 
 ### Web-Based Uploads
-Users can now ingest data directly through the UI via the "Paperclip" button in the chat.
+Users can ingest data directly through the UI via the "Paperclip" button in the chat.
 1.  **Frontend**: Triggers a file picker, wraps the file in `FormData`, and sends to `/nutrition/upload`.
 2.  **Backend**: Identifies the parser, validates the schema, performs an **UPSERT** to prevent duplicates, and returns a summary message.
+
+### Agent-Driven Sync
+The Agent has autonomy to keep data fresh:
+*   **Explicit**: Uses `sync_workout_data` tool when user asks to "refresh" or says "just worked out".
+*   **Opportunistic**: `get_recent_workouts` triggers a shallow sync (last 10 items) automatically if the query is for recent data, ensuring the dashboard and chat are always up-to-date.
 
 ---
 
